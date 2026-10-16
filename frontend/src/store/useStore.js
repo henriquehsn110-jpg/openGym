@@ -258,8 +258,8 @@ const detectedLang = () => {
 // merged under a saved copy it would claim that every existing profile never chose.
 export function freshState() {
   const s = clone(DEF)
-  s.lang = detectedLang()
-  s.langAuto = true
+  s.lang = 'pt-BR'
+  s.langAuto = false
   s.weighIn = false
   // Exercise animations: Small (v1.3.11), a thumbnail beside the exercise name that a tap opens,
   // so the first set is on screen without scrolling. DEF stays 'full' for a profile saved before.
@@ -1826,9 +1826,9 @@ export const useStore = create((set, get) => {
     // Demo build only: drop the seeded example profile back in (Settings → "Reset demo data").
     // Dynamic import so the generator never ships in a self-hosted bundle.
     async resetDemo() {
-      const { buildDemoState } = await import('../lib/demoSeed.js')
+      // FORGE test starts with an empty personal profile, never fabricated history.
       markOwed(false)
-      persist(Object.assign(clone(DEF), buildDemoState()), false)
+      persist(freshState(), false)
       // The demo's photos and videos were only ever in this browser, and the reset takes them too.
       await mediaStore.clearAll().catch(() => {})
     },
