@@ -857,9 +857,9 @@ export default function Settings({ page = null, find = null, via = null }) {
             onClick={connectServer} />
           <KeptChangesRows />
         </> : DEMO ? <>
-          <Row icon="info" iconTint="var(--acc)" title={t('You’re in the demo')} subtitle={t('Example data, stored only in this browser. Go wild and change anything you like.')} />
-          <Row icon="reset" iconTint="var(--blue)" title={t('Reset demo data')} accessory="chevron"
-            onClick={() => confirmSheet({ title: t('Reset demo data?'), message: t('Puts the example plan, workouts and weigh-ins back the way they started.'), confirmText: t('Reset'), onConfirm: () => { resetDemo(); nav('/home'); toast(t('Demo data reset')) } })} />
+          <Row icon="info" iconTint="var(--acc)" title={'Teste local FORGE · openGym'} subtitle={'Seus dados ficam neste navegador. Exporte uma cópia de segurança; não há sincronização.'} />
+          <Row icon="reset" iconTint="var(--blue)" title={'Apagar dados do teste'} accessory="chevron"
+            onClick={() => confirmSheet({ title: 'Apagar todos os dados locais?', message: 'Remove seu plano, treinos e medidas deste navegador. Exporte uma cópia antes de continuar.', confirmText: t('Reset'), onConfirm: () => { resetDemo(); nav('/home'); toast('Perfil local reiniciado') } })} />
           <Row icon="rocket" iconTint="var(--indigo)" title={t('Self-host openGym')} subtitle={t('Passkey sign-in, sync across your devices, your own data.')} accessory="chevron"
             onClick={() => window.open(REPO, '_blank', 'noopener')} />
         </> : user ? <>
