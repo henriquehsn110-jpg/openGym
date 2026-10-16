@@ -201,6 +201,7 @@ function Shell() {
       {/* keyed on the route: a view that throws is contained, and switching tabs
           re-mounts the boundary, so the tab bar is always a way out */}
       <div id="app" className="vfade" key={loc.pathname}>
+        <div className="forge-edition"><strong>FORGE · openGym</strong><span>Teste pessoal · dados somente neste navegador</span><a href="/forge-sobre.html" target="_blank" rel="noreferrer">Sobre, licenças e código</a></div>
         <ErrorBoundary>
           {!authed ? <Login /> : needsMobileOnboarding ? <MobileOnboarding /> : (
             <Routes>
