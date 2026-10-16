@@ -2135,3 +2135,6 @@ button.wl-summary{width:100%;padding:0 0 10px;text-align:start;border-radius:var
 [dir="rtl"] *{letter-spacing:0}
 .exfix-link{display:inline-flex;align-items:center;gap:5px;margin:14px 0 4px;color:var(--label-3);text-decoration:none}
 .list .similar-label{margin:16px 2px 6px;grid-column:1/-1}
+
+/* FORGE edition */
+.forge-edition{display:flex;flex-wrap:wrap;gap:6px 12px;padding:12px 16px;margin-top:env(safe-area-inset-top);font-size:12px;align-items:center;border-bottom:1px solid var(--separator);color:var(--label-2)}.forge-edition strong{color:var(--label);font-size:14px}.forge-edition a{color:inherit;text-decoration:underline}.forge-edition span{flex:1 1 180px}
