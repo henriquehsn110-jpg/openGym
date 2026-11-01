@@ -42,3 +42,17 @@ describe('useClipInMemory', () => {
     expect(out.value).toBe('exercise-media/clip/0003.mp4')
   })
 })
+
+ it('FORGE web buffers the full clip by default and deduplicates simultaneous requests', async () => {
+ const spy = vi.spyOn(globalThis,'fetch').mockResolvedValue(new Response(new Blob(['x'], { type:'video/mp4' })))
+ vi.spyOn(URL,'createObjectURL').mockReturnValue('blob:forge-web')
+ const first={}, second={}
+ mount({src:'exercise-media/clip/forge-test.mp4',out:first})
+ mount({src:'exercise-media/clip/forge-test.mp4',out:second})
+ expect(first.value).toBe(null)
+ await act(async () => { await new Promise(r=>setTimeout(r,0)) })
+ expect(first.value).toBe('blob:forge-web')
+ expect(second.value).toBe('blob:forge-web')
+ expect(spy).toHaveBeenCalledTimes(1)
+ vi.restoreAllMocks()
+ })
