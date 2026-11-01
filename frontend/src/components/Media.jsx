@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
 import { imgSrc, gifSrc, isVideoSrc, isCustomEx, figureOf } from '../lib/exercises.js'
-import { MOBILE } from '../lib/mobile.js'
 import { useStore } from '../store/useStore.js'
 import { t, exerciseNameFor } from '../lib/i18n.js'
 import Icon from './Icon.jsx'
@@ -50,7 +49,7 @@ function BuiltinMedia({ ex, id, compact, minimizable }) {
         : showGif && clip && clipSrc
           // No poster: Android's WebView went back to it at every loop and stalled there (the
           // still above stands in while the clip loads, so nothing is lost without it).
-          ? <video ref={autoplayMuted} className="catvid" src={clipSrc} autoPlay muted loop playsInline disablePictureInPicture
+          ? <video ref={autoplayMuted} className="catvid" src={clipSrc} preload="auto" autoPlay muted loop playsInline disablePictureInPicture
               aria-label={exerciseNameFor(ex)} onError={onError} />
           : showGif && clip
             // the phone app is still reading the clip into memory: the still holds its place
@@ -70,6 +69,8 @@ function BuiltinMedia({ ex, id, compact, minimizable }) {
   )
 }
 
+// FORGE: web and installed browsers also buffer the small clip once to avoid repeated
+// network seeks on every loop. Media bytes are unmodified. Falls back to streaming on error.
 // In the phone app the clips come out of the app package through Capacitor's local server, which
 // answers every seek with a fresh, slow read: each loop jumped back to 0 and sat there for one to
 // five seconds, and users saw "slow and buggy" animations (the web, with its HTTP cache, never
@@ -101,7 +102,7 @@ function loadClip(src) {
   return clipLoads.get(src)
 }
 
-export function useClipInMemory(src, inApp = MOBILE) {
+export function useClipInMemory(src, inApp = true) {
   const [url, setUrl] = useState(() => (src && inApp ? clipCache.get(src) || null : src))
   useEffect(() => {
     if (!src || !inApp) { setUrl(src); return }
