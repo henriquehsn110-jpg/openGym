@@ -238,5 +238,19 @@ export const FORGE_DEMOS = {
     "language": "en",
     "source": "https://www.youtube.com/watch?v=o4GKiEoYClI",
     "checkedAt": "2026-11-04"
+  },
+  "0025": {
+    "name": "Supino reto com barra",
+    "videoId": "rT7DgCr-3pg",
+    "channel": "ScottHermanFitness",
+    "videoTitle": "How To: Barbell Bench Press",
+    "variant": "Banco reto · Barra",
+    "tips": [
+      "Ajuste o banco e use suportes de segurança ou ajuda para retirar a barra.",
+      "Mantenha os pés apoiados e controle a descida. Siga a respiração contínua da sua ficha."
+    ],
+    "language": "en",
+    "source": "https://www.youtube.com/watch?v=rT7DgCr-3pg",
+    "checkedAt": "2026-11-04"
   }
 }
