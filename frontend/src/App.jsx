@@ -34,6 +34,7 @@ import CheckIn from './views/CheckIn.jsx'
 import Plan from './views/Plan.jsx'
 import Nutrition from './views/Nutrition.jsx'
 import ForgeHome from './views/ForgeHome.jsx'
+import ForgeTraining from './views/ForgeTraining.jsx'
 import RoutineEdit from './views/RoutineEdit.jsx'
 import Workout from './views/Workout.jsx'
 import Stats from './views/Stats.jsx'
@@ -203,7 +204,7 @@ function Shell() {
       {/* keyed on the route: a view that throws is contained, and switching tabs
           re-mounts the boundary, so the tab bar is always a way out */}
       <div id="app" className="vfade" key={loc.pathname}>
-        <div className="forge-edition"><strong>FORGE</strong><a href="#/home">Meu dia</a><a href="#/nutrition">Alimentação</a><a href="#/plan">Treino</a><span>Teste pessoal · dados somente neste navegador</span><a href="/forge-sobre.html" target="_blank" rel="noreferrer">Sobre, licenças e código</a></div>
+        <div className="forge-edition"><strong>FORGE</strong><a href="#/home">Meu dia</a><a href="#/nutrition">Alimentação</a><a href="#/training">Treino</a><span>Teste pessoal · dados somente neste navegador</span><a href="/forge-sobre.html" target="_blank" rel="noreferrer">Sobre, licenças e código</a></div>
         <ErrorBoundary>
           {!authed ? <Login /> : needsMobileOnboarding ? <MobileOnboarding /> : (
             <Routes>
@@ -213,6 +214,7 @@ function Shell() {
                   catch-all redirect below. */}
               {S.checkIn !== false && <Route path="/checkin" element={<CheckIn />} />}
               <Route path="/nutrition" element={<Nutrition />} />
+              <Route path="/training" element={<ForgeTraining />} />
               <Route path="/plan" element={<Plan />} />
               <Route path="/plan/r/:id" element={<RoutineEdit />} />
               <Route path="/workout" element={<Workout />} />
