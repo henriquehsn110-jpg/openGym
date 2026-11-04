@@ -9,7 +9,9 @@ if(typeof window!=='undefined'){
 }
 export const installSnapshot=()=>installed||standalone()?'installed':promptEvent?'ready':'manual';
 export const subscribeInstall=listener=>{subscribers.add(listener);return ()=>subscribers.delete(listener)};
+export const useChromeForInstall=(ua=typeof navigator!=='undefined'?navigator.userAgent:'')=>/Android/i.test(ua)&&/SamsungBrowser|SamsungInternet/i.test(ua);
 export async function requestInstall(){
+ if(useChromeForInstall())return 'use-chrome';
  const event=promptEvent;if(!event)return 'manual';promptEvent=null;emit();
  try{await event.prompt();const choice=await event.userChoice;return choice?.outcome==='accepted'?'accepted':'dismissed'}catch{return 'manual'}
 }

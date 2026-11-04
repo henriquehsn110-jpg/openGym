@@ -5,12 +5,26 @@ import {it,expect,vi} from 'vitest'
 import {MemoryRouter} from 'react-router-dom'
 vi.mock('../lib/api.js',()=>({api:vi.fn()}))
 import InstallApp from './InstallApp.jsx'
+import {useChromeForInstall,requestInstall} from '../lib/forge-install.js'
 import ForgeHome from '../views/ForgeHome.jsx'
 import {useStore,freshState} from '../store/useStore.js'
 import {ensureForgeMeals} from '../lib/forge-profile.js'
 globalThis.IS_REACT_ACT_ENVIRONMENT=true
 it('offers manual instructions when the browser has not offered installation',async()=>{
  const host=document.createElement('div'),root=createRoot(host);act(()=>root.render(<InstallApp/>));await act(async()=>host.querySelector('button').click());expect(host.textContent).toContain('Adicionar à tela inicial');expect(host.textContent).toContain('dados separados');act(()=>root.unmount())
+})
+it('recognizes Samsung Internet while preserving the normal Chrome path',()=>{
+ expect(useChromeForInstall('Mozilla Android SamsungBrowser/29.0 Chrome/130')).toBe(true)
+ expect(useChromeForInstall('Mozilla Android Chrome/140 Mobile')).toBe(false)
+ expect(useChromeForInstall('Mozilla iPhone Safari')).toBe(false)
+})
+it('guides Samsung users to Chrome without invoking the blocked native installer',async()=>{
+ const ua=vi.spyOn(window.navigator,'userAgent','get').mockReturnValue('Mozilla Android SamsungBrowser/29.0');
+ const host=document.createElement('div'),root=createRoot(host),prompt=vi.fn();const event=new Event('beforeinstallprompt',{cancelable:true});event.prompt=prompt;
+ try{
+  act(()=>window.dispatchEvent(event));expect(await requestInstall()).toBe('use-chrome');
+  act(()=>root.render(<MemoryRouter><InstallApp/></MemoryRouter>));expect(host.textContent).toContain('Instalar pelo Chrome');await act(async()=>host.querySelector('button').click());expect(prompt).not.toHaveBeenCalled();expect(host.textContent).toContain('mantenha a proteção ativa');expect(host.textContent).toContain('Importar backup');expect(host.querySelector('a').getAttribute('href')).toBe('/settings/data');expect(host.querySelector('input').value).not.toContain('gym_state');
+ }finally{act(()=>root.unmount());ua.mockRestore()}
 })
 it('offers native installation only from an actual browser event and hides after appinstalled',async()=>{
  const host=document.createElement('div'),root=createRoot(host),prompt=vi.fn(()=>Promise.resolve());act(()=>root.render(<InstallApp/>));const event=new Event('beforeinstallprompt',{cancelable:true});event.prompt=prompt;event.userChoice=Promise.resolve({outcome:'accepted'});
