@@ -32,6 +32,7 @@ import MobileOnboarding from './views/MobileOnboarding.jsx'
 import Home from './views/Home.jsx'
 import CheckIn from './views/CheckIn.jsx'
 import Plan from './views/Plan.jsx'
+import Nutrition from './views/Nutrition.jsx'
 import RoutineEdit from './views/RoutineEdit.jsx'
 import Workout from './views/Workout.jsx'
 import Stats from './views/Stats.jsx'
@@ -201,7 +202,7 @@ function Shell() {
       {/* keyed on the route: a view that throws is contained, and switching tabs
           re-mounts the boundary, so the tab bar is always a way out */}
       <div id="app" className="vfade" key={loc.pathname}>
-        <div className="forge-edition"><strong>FORGE · openGym</strong><span>Teste pessoal · dados somente neste navegador</span><a href="/forge-sobre.html" target="_blank" rel="noreferrer">Sobre, licenças e código</a></div>
+        <div className="forge-edition"><strong>FORGE · openGym</strong><a href="#/nutrition">Alimentação</a><a href="#/plan">Treino</a><span>Teste pessoal · dados somente neste navegador</span><a href="/forge-sobre.html" target="_blank" rel="noreferrer">Sobre, licenças e código</a></div>
         <ErrorBoundary>
           {!authed ? <Login /> : needsMobileOnboarding ? <MobileOnboarding /> : (
             <Routes>
@@ -209,6 +210,7 @@ function Shell() {
               {/* Gym check-in — switched off in Settings, the route falls through to the
                   catch-all redirect below. */}
               {S.checkIn !== false && <Route path="/checkin" element={<CheckIn />} />}
+              <Route path="/nutrition" element={<Nutrition />} />
               <Route path="/plan" element={<Plan />} />
               <Route path="/plan/r/:id" element={<RoutineEdit />} />
               <Route path="/workout" element={<Workout />} />
