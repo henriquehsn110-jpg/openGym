@@ -43,3 +43,9 @@ it('preserves existing schedules and old active sessions while offering resume',
 it('shares a clean URL without profile or workout data',()=>{
  useStore.setState({S:{...freshState(),workouts:[{id:'private'}],forgeNutrition:[{text:'private meal'}]}});const app=mount(<ForgeFamily/>);expect(familyAppUrl()).toBe(window.location.origin+window.location.pathname+'#/family');expect(app.host.textContent).toContain('não tem contas');expect(app.host.textContent).not.toContain('private');app.close()
 })
+
+it('honours a linked session even when it is not the next scheduled day',()=>{
+ const s=freshState();activateForgePlan(s);useStore.setState({S:s});const host=document.createElement('div'),root=createRoot(host);
+ act(()=>root.render(<MemoryRouter initialEntries={['/my-training?routine='+s.routines[3].id]}><ForgeWorkouts/></MemoryRouter>));
+ expect(host.querySelector('.forge-workout-top h2').textContent).toBe('Pernas B + abdômen');act(()=>root.unmount())
+})

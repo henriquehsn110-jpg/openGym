@@ -193,7 +193,7 @@ function Shell() {
   const noTabs = inWorkout || loc.pathname === '/coach' || needsMobileOnboarding
 
   const authed = user || isGuest
-  if (!ready && !authed) return (
+  if (langV === 0 || (!ready && !authed)) return (
     <div id="app">
       <div style={{ paddingTop: '44vh', display: 'flex', justifyContent: 'center', fontSize: 34, color: 'var(--label-3)' }}>
         <Icon name="dumbbell" />
@@ -206,7 +206,7 @@ function Shell() {
       {/* keyed on the route: a view that throws is contained, and switching tabs
           re-mounts the boundary, so the tab bar is always a way out */}
       <div id="app" className="vfade" key={loc.pathname}>
-        <div className="forge-edition"><strong>FORGE</strong><a href="#/home">Meu dia</a><a href="#/nutrition">Alimentação</a><a href="#/my-training">Treino</a><span>Teste pessoal · dados somente neste navegador</span><a href="/forge-sobre.html" target="_blank" rel="noreferrer">Sobre, licenças e código</a></div>
+        <div className="forge-edition"><strong>FORGE</strong><a href="#/home">Meu dia</a><a href="#/nutrition">Alimentação</a><a href="#/my-training">Treino</a><a href="#/family">Família ↗</a><span>Teste pessoal · dados somente neste navegador</span><a href="/forge-sobre.html" target="_blank" rel="noreferrer">Sobre, licenças e código</a></div>
         <ErrorBoundary>
           {!authed ? <Login /> : needsMobileOnboarding ? <MobileOnboarding /> : (
             <Routes>
