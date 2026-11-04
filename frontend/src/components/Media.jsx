@@ -4,6 +4,7 @@ import { useStore } from '../store/useStore.js'
 import { t, exerciseNameFor } from '../lib/i18n.js'
 import Icon from './Icon.jsx'
 import YouTubeDemo from './YouTubeDemo.jsx'
+import {demoFor,thumbnailFor} from '../lib/forge-video.js'
 import CustomMedia, { CustomThumb } from './CustomMedia.jsx'
 
 // An exercise's picture, wherever one shows. A custom exercise goes to CustomMedia.jsx — its own
@@ -11,7 +12,14 @@ import CustomMedia, { CustomThumb } from './CustomMedia.jsx'
 // name files of the shipped dataset (a stray img/gif on a custom exercise, written by a fork, is
 // ignored). The split is by component, not by branch, so each side keeps its own hooks in order.
 export default function Media(p) {
-  return isCustomEx(p.ex) ? <CustomMedia {...p} /> : <YouTubeDemo key={p.ex.id} ex={p.ex} />
+  return isCustomEx(p.ex) ? <CustomMedia {...p} /> : <BuiltinVideo key={p.ex.id} {...p} />
+}
+
+function BuiltinVideo({ex,minimizable}) {
+ const size=useStore(s=>s.S.gifSize),update=useStore(s=>s.update);
+ if(minimizable&&size==='off')return null;
+ if(minimizable&&size==='mini')return <button className="forge-media-mini" onClick={()=>update(s=>{s.gifSize='full'})}><Thumb ex={ex}/><span>Ver demonstração <b>▶</b></span></button>;
+ return <div className="forge-media-panel"><YouTubeDemo ex={ex}/>{minimizable&&<button className="forge-media-minimize" onClick={()=>update(s=>{s.gifSize='mini'})}>Recolher demonstração</button>}</div>
 }
 
 // Big autoplaying animation; tap toggles to the still frame. `compact` shrinks it (superset cards).
@@ -137,9 +145,8 @@ export function Thumb(p) {
   return isCustomEx(p.ex) ? <CustomThumb {...p} /> : <BuiltinThumb {...p} />
 }
 function BuiltinThumb({ ex }) {
-  const body = useStore(s => figureOf(s.S))
-  const src = ex.img ? imgSrc(ex, body) : null
-  const [broken, setBroken] = useState(null)
-  if (!src || broken === src) return <div className="thumb thumb-x"><Icon name="dumbbell" /></div>
-  return <img className="thumb" loading="lazy" decoding="async" draggable={false} src={src} alt="" onError={() => setBroken(src)} />
+  const saved=useStore(s=>s.S.forgeYouTube?.[ex.id]);const demo=demoFor({forgeYouTube:{[ex.id]:saved}},ex.id);
+  const [broken,setBroken]=useState(null);const src=demo?thumbnailFor(demo.videoId):null;
+  if(!src||broken===src)return <div className="thumb thumb-x" aria-label="Sem capa de vídeo"><Icon name="dumbbell" /></div>
+  return <div className="forge-thumb-wrap"><img className="thumb forge-video-thumb" loading="lazy" decoding="async" draggable={false} src={src} alt="" onError={()=>setBroken(src)}/><span aria-hidden="true">▶</span></div>
 }

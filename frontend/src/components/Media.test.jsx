@@ -41,36 +41,32 @@ afterEach(() => {
 
 const mount = props => act(() => root.render(<Media ex={EX} {...props} />))
 
-describe('Media gifSize', () => {
-  it('renders the full animation by default and toggles to mini in the workout', () => {
+describe('Media gifSize — FORGE YouTube demonstrations', () => {
+  it('shows a click-to-load demo and preserves the compact workout preference', () => {
     mount({ minimizable: true })
-    expect(host.querySelector('.exmedia img')).toBeTruthy()
-    expect(host.querySelector('.exmedia.mini')).toBeFalsy()
-    act(() => { host.querySelector('.giftoggle').click() })
+    expect(host.querySelector('.forge-demo')).toBeTruthy()
+    expect(host.querySelector('iframe')).toBeNull()
+    act(() => host.querySelector('.forge-media-minimize').click())
     expect(mocks.S.gifSize).toBe('mini')
     mount({ minimizable: true })
-    expect(host.querySelector('.exmedia.mini')).toBeTruthy()
+    expect(host.querySelector('.forge-media-mini')).toBeTruthy()
+    expect(host.querySelector('.forge-demo')).toBeNull()
+    act(() => host.querySelector('.forge-media-mini').click())
+    expect(mocks.S.gifSize).toBe('full')
   })
-
-  it("renders nothing at all in the workout when gifSize is 'off'", () => {
-    mocks.S = { gifSize: 'off' }
-    mount({ minimizable: true })
-    expect(host.querySelector('.exmedia')).toBeFalsy()
-    expect(host.querySelector('img')).toBeFalsy()
+  it("renders nothing in the workout when media is off", () => {
+    mocks.S = { gifSize: 'off' }; mount({ minimizable: true })
     expect(host.innerHTML).toBe('')
   })
-
-  it("'off' only applies to the workout — the detail sheet (not minimizable) still shows media", () => {
-    mocks.S = { gifSize: 'off' }
-    mount({})
-    expect(host.querySelector('.exmedia img')).toBeTruthy()
+  it('keeps the detail sheet available when workout media is off', () => {
+    mocks.S = { gifSize: 'off' }; mount({})
+    expect(host.querySelector('.forge-demo')).toBeTruthy()
+    expect(host.querySelector('iframe')).toBeNull()
   })
-
-  it('treats a legacy/unknown value as full', () => {
-    mocks.S = { gifSize: 'huge' }
-    mount({ minimizable: true })
-    expect(host.querySelector('.exmedia img')).toBeTruthy()
-    expect(host.querySelector('.exmedia.mini')).toBeFalsy()
+  it('shows the demonstration for an unknown legacy size', () => {
+    mocks.S = { gifSize: 'huge' }; mount({ minimizable: true })
+    expect(host.querySelector('.forge-demo')).toBeTruthy()
+    expect(host.querySelector('.forge-media-mini')).toBeNull()
   })
 })
 

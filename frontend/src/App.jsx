@@ -35,6 +35,8 @@ import Plan from './views/Plan.jsx'
 import Nutrition from './views/Nutrition.jsx'
 import ForgeHome from './views/ForgeHome.jsx'
 import ForgeTraining from './views/ForgeTraining.jsx'
+import ForgeWorkouts from './views/ForgeWorkouts.jsx'
+import ForgeFamily from './views/ForgeFamily.jsx'
 import RoutineEdit from './views/RoutineEdit.jsx'
 import Workout from './views/Workout.jsx'
 import Stats from './views/Stats.jsx'
@@ -116,7 +118,7 @@ function Shell() {
   // worked out here, on this device, and never written into the synced state (lib/default-lang.js).
   const config = useStore(s => s.config)
   const lang = effectiveLang(S, config)
-  useEffect(() => { setLang(lang, S.enParens?.[baseLang(lang)] ?? true, S.enOnly?.[baseLang(lang)] === true) }, [lang, S.enParens, S.enOnly])
+  useEffect(() => { setLang(lang, S.enParens?.[baseLang(lang)] ?? !lang.startsWith('pt'), S.enOnly?.[baseLang(lang)] === true) }, [lang, S.enParens, S.enOnly])
   // Same shape as the language: a module-level display setting, pushed when it changes (#139).
   useEffect(() => { setWeightDecimals(S.wdec) }, [S.wdec])
   useEffect(() => { document.documentElement.lang = lang }, [langV, lang])
@@ -204,7 +206,7 @@ function Shell() {
       {/* keyed on the route: a view that throws is contained, and switching tabs
           re-mounts the boundary, so the tab bar is always a way out */}
       <div id="app" className="vfade" key={loc.pathname}>
-        <div className="forge-edition"><strong>FORGE</strong><a href="#/home">Meu dia</a><a href="#/nutrition">Alimentação</a><a href="#/training">Treino</a><span>Teste pessoal · dados somente neste navegador</span><a href="/forge-sobre.html" target="_blank" rel="noreferrer">Sobre, licenças e código</a></div>
+        <div className="forge-edition"><strong>FORGE</strong><a href="#/home">Meu dia</a><a href="#/nutrition">Alimentação</a><a href="#/my-training">Treino</a><span>Teste pessoal · dados somente neste navegador</span><a href="/forge-sobre.html" target="_blank" rel="noreferrer">Sobre, licenças e código</a></div>
         <ErrorBoundary>
           {!authed ? <Login /> : needsMobileOnboarding ? <MobileOnboarding /> : (
             <Routes>
@@ -215,6 +217,8 @@ function Shell() {
               {S.checkIn !== false && <Route path="/checkin" element={<CheckIn />} />}
               <Route path="/nutrition" element={<Nutrition />} />
               <Route path="/training" element={<ForgeTraining />} />
+              <Route path="/my-training" element={<ForgeWorkouts />} />
+              <Route path="/family" element={<ForgeFamily />} />
               <Route path="/plan" element={<Plan />} />
               <Route path="/plan/r/:id" element={<RoutineEdit />} />
               <Route path="/workout" element={<Workout />} />

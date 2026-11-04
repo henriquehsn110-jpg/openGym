@@ -1,3 +1,4 @@
+import { FORGE_DEMOS } from './forge-demos.js'
 // Runtime-agnostic core of the i18n module: state, constants and readers (t, dateLocale,
 // instrFor, exerciseNameFor, getLang). Plain Node-loadable — the browser-only pieces
 // (import.meta.glob lazy
@@ -201,6 +202,7 @@ export function _setDetails(newEnInstr, newEnDescs, newDescs, forLang = lang) {
 // exercise the pack has no entry for keeps its English title, one exercise at a time.
 // User-created exercises have no entry in the pack and keep their exact chosen name.
 export const exerciseNameFor = ex => {
+  if(lang.startsWith('pt') && !enOnly && FORGE_DEMOS[ex?.id]) return FORGE_DEMOS[ex.id].name
   // A language that chose "English names only" sees the canonical catalogue title, not the
   // translation — and never the parenthetical either. Custom exercises keep their exact name.
   if (enOnly) return ex?.n || ''
