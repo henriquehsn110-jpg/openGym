@@ -3,6 +3,7 @@ import { imgSrc, gifSrc, isVideoSrc, isCustomEx, figureOf } from '../lib/exercis
 import { useStore } from '../store/useStore.js'
 import { t, exerciseNameFor } from '../lib/i18n.js'
 import Icon from './Icon.jsx'
+import YouTubeDemo from './YouTubeDemo.jsx'
 import CustomMedia, { CustomThumb } from './CustomMedia.jsx'
 
 // An exercise's picture, wherever one shows. A custom exercise goes to CustomMedia.jsx — its own
@@ -10,7 +11,7 @@ import CustomMedia, { CustomThumb } from './CustomMedia.jsx'
 // name files of the shipped dataset (a stray img/gif on a custom exercise, written by a fork, is
 // ignored). The split is by component, not by branch, so each side keeps its own hooks in order.
 export default function Media(p) {
-  return isCustomEx(p.ex) ? <CustomMedia {...p} /> : <BuiltinMedia {...p} />
+  return isCustomEx(p.ex) ? <CustomMedia {...p} /> : <YouTubeDemo key={p.ex.id} ex={p.ex} />
 }
 
 // Big autoplaying animation; tap toggles to the still frame. `compact` shrinks it (superset cards).
