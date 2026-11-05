@@ -36,6 +36,14 @@ it('initializes an empty personal schedule and changes selected routine without 
  const buttons=[...app.host.querySelectorAll('.forge-routine-picker button')];expect(buttons).toHaveLength(4);act(()=>buttons[1].click());expect(app.host.querySelector('.forge-workout-top h2').textContent).toBe('Pernas A')
  act(()=>[...app.host.querySelectorAll('button')].find(x=>x.textContent.includes('Iniciar treino')).click());expect(startFlow).toHaveBeenCalledWith([useStore.getState().S.routines[1].id]);app.close()
 })
+it('opens the personal workout with a catalogue still and tap-to-play animation before YouTube',()=>{
+ useStore.setState({S:freshState()});const app=mount(<ForgeWorkouts/>);
+ expect(app.host.querySelector('.forge-exercise summary img').getAttribute('src')).toContain('exercise-media/still/');
+ act(()=>{const details=app.host.querySelector('.forge-exercise');details.open=true;details.dispatchEvent(new Event('toggle'))});
+ expect(app.host.querySelector('.forge-loop-button')).toBeTruthy();expect(app.host.querySelector('.forge-loop-still')).toBeTruthy();
+ expect(app.host.querySelector('video')).toBeNull();expect(app.host.querySelector('iframe')).toBeNull();
+ expect(app.host.querySelector('.forge-video-cover')).toBeNull();app.close()
+})
 it('preserves existing schedules and old active sessions while offering resume',()=>{
  const s=freshState();activateForgePlan(s);s.workouts=[{id:'logged'}];s.active={start:Date.now()-24*60*60*1000,name:'old',entries:[]};const before=JSON.stringify(s);useStore.setState({S:s});const app=mount(<ForgeWorkouts/>);
  expect(app.host.textContent).toContain('sessão antiga');expect(app.host.textContent).not.toContain('Iniciar treino');expect(JSON.stringify(useStore.getState().S)).toBe(before);app.close()

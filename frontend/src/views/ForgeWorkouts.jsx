@@ -5,8 +5,7 @@ import {exOr} from '../lib/exercises.js'
 import {exerciseNameFor} from '../lib/i18n.js'
 import {FORGE_DEMOS} from '../lib/forge-demos.js'
 import {activateForgePlan} from '../lib/forge-profile.js'
-import {Thumb} from '../components/Media.jsx'
-import YouTubeDemo from '../components/YouTubeDemo.jsx'
+import Media, {Thumb} from '../components/Media.jsx'
 import {startFlow} from '../sheets.jsx'
 import {nextForgeRoutine} from '../lib/forge-schedule.js'
 import './forge.css'
@@ -36,6 +35,6 @@ function ForgeExercise({e,i,rid,defaultRest}){
  const [open,setOpen]=useState(false);const ex=exOr(e.id),meta=FORGE_DEMOS[e.id];const reps=e.repsMin&&e.repsMax?e.repsMin+'–'+e.repsMax:e.reps||'—';
  return <details className="forge-exercise" onToggle={event=>setOpen(event.currentTarget.open)}>
   <summary><span className="forge-ex-number">{String(i+1).padStart(2,'0')}</span><Thumb ex={ex}/><span className="forge-ex-body"><strong>{meta?.name||exerciseNameFor(ex)}</strong><small>{meta?.variant||'Consulte a execução'}</small><span className="forge-prescription"><b>{e.sets} séries × {reps}{e.side?' / lado':''}</b><span>{e.restSec||defaultRest||90}s de descanso</span></span></span><span className="forge-expand" aria-hidden="true">＋</span></summary>
-  {open&&<div className="forge-exercise-inside"><YouTubeDemo ex={ex}/>{e.note&&<p className="forge-ex-note"><strong>Na sua ficha</strong>{e.note}</p>}<Link className="forge-text-btn" to={'/plan/r/'+rid}>Ajustar prescrição →</Link></div>}
+  {open&&<div className="forge-exercise-inside"><Media ex={ex}/>{e.note&&<p className="forge-ex-note"><strong>Na sua ficha</strong>{e.note}</p>}<Link className="forge-text-btn" to={'/plan/r/'+rid}>Ajustar prescrição →</Link></div>}
  </details>
 }

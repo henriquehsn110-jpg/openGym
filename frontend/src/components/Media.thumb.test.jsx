@@ -55,23 +55,25 @@ describe('Thumb', () => {
     }
   })
 
-  it('falls back from a failed YouTube cover to the actual exercise illustration', () => {
+  it('uses the illustration first and a linked video cover only if it fails', () => {
     const { host } = mount(<Thumb ex={{ id: '0289', img: '0289.webp' }} />)
-    expect(host.querySelector('img').src).toContain('img.youtube.com')
-    act(() => host.querySelector('img').dispatchEvent(new Event('error')))
     expect(host.querySelector('img').getAttribute('src')).toBe('exercise-media/still/0289.webp')
     expect(host.querySelector('.forge-thumb-wrap')).toBeNull()
+    act(() => host.querySelector('img').dispatchEvent(new Event('error')))
+    expect(host.querySelector('img').src).toContain('img.youtube.com')
     act(() => host.querySelector('img').dispatchEvent(new Event('error')))
     expect(host.querySelector('img')).toBeNull()
     expect(host.querySelector('.thumb-x')).toBeTruthy()
   })
 
-  it('uses the selected figure and retries a newly linked video after an old cover fails', () => {
+  it('uses the selected figure and retries a newly linked video after both fallbacks fail', () => {
     state.S = { exFigure: 'female', forgeYouTube: { a: 'https://youtu.be/dQw4w9WgXcQ' } }
     const ex = { id: 'a', img: '1234.webp', fv: '5678' }
     const { host, root } = mount(<Thumb ex={ex} />)
-    act(() => host.querySelector('img').dispatchEvent(new Event('error')))
     expect(host.querySelector('img').getAttribute('src')).toBe('exercise-media/still/5678.webp')
+    act(() => host.querySelector('img').dispatchEvent(new Event('error')))
+    expect(host.querySelector('img').getAttribute('src')).toBe(thumbnailFor('dQw4w9WgXcQ'))
+    act(() => host.querySelector('img').dispatchEvent(new Event('error')))
     state.S.forgeYouTube.a = 'https://youtu.be/abcdefghijk'
     act(() => root.render(<Thumb ex={ex} />))
     expect(host.querySelector('img').getAttribute('src')).toBe(thumbnailFor('abcdefghijk'))

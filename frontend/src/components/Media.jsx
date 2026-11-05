@@ -213,11 +213,12 @@ function BuiltinThumb({ ex }) {
   const demo = demoFor({ forgeYouTube: { [ex.id]: saved } }, ex.id)
   const [broken, setBroken] = useState(() => new Set())
   const cover = demo ? thumbnailFor(demo.videoId) : null
-  // A video is optional. Every catalogue exercise keeps its own bundled illustration,
-  // also used when an external YouTube cover cannot load (offline or unavailable).
+  // Keep the catalogue's visual identity in lists, matching the inline animation. A linked
+  // YouTube cover is only a fallback when the bundled illustration cannot be shown.
   const still = ex.img || (body === 'female' ? ex.fv : ex.mv) ? imgSrc(ex, body) : null
-  const useCover = cover && !broken.has(cover)
-  const src = useCover ? cover : still && !broken.has(still) ? still : null
+  const useStill = still && !broken.has(still)
+  const useCover = !useStill && cover && !broken.has(cover)
+  const src = useStill ? still : useCover ? cover : null
   if (!src) return <div className="thumb thumb-x" aria-label="Imagem indisponível"><Icon name="dumbbell" /></div>
   const image = <img key={src} className={'thumb' + (useCover ? ' forge-video-thumb' : '')}
     loading="lazy" decoding="async" draggable={false} src={src} alt=""
