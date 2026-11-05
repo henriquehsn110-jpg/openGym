@@ -145,8 +145,19 @@ export function Thumb(p) {
   return isCustomEx(p.ex) ? <CustomThumb {...p} /> : <BuiltinThumb {...p} />
 }
 function BuiltinThumb({ ex }) {
-  const saved=useStore(s=>s.S.forgeYouTube?.[ex.id]);const demo=demoFor({forgeYouTube:{[ex.id]:saved}},ex.id);
-  const [broken,setBroken]=useState(null);const src=demo?thumbnailFor(demo.videoId):null;
-  if(!src||broken===src)return <div className="thumb thumb-x" aria-label="Sem capa de vídeo"><Icon name="dumbbell" /></div>
-  return <div className="forge-thumb-wrap"><img className="thumb forge-video-thumb" loading="lazy" decoding="async" draggable={false} src={src} alt="" onError={()=>setBroken(src)}/><span aria-hidden="true">▶</span></div>
+  const saved = useStore(s => s.S.forgeYouTube?.[ex.id])
+  const body = useStore(s => figureOf(s.S))
+  const demo = demoFor({ forgeYouTube: { [ex.id]: saved } }, ex.id)
+  const [broken, setBroken] = useState(() => new Set())
+  const cover = demo ? thumbnailFor(demo.videoId) : null
+  // A video is optional. Every catalogue exercise keeps its own bundled illustration,
+  // also used when an external YouTube cover cannot load (offline or unavailable).
+  const still = ex.img || (body === 'female' ? ex.fv : ex.mv) ? imgSrc(ex, body) : null
+  const useCover = cover && !broken.has(cover)
+  const src = useCover ? cover : still && !broken.has(still) ? still : null
+  if (!src) return <div className="thumb thumb-x" aria-label="Imagem indisponível"><Icon name="dumbbell" /></div>
+  const image = <img key={src} className={'thumb' + (useCover ? ' forge-video-thumb' : '')}
+    loading="lazy" decoding="async" draggable={false} src={src} alt=""
+    onError={() => setBroken(prev => new Set([...prev, src]))} />
+  return useCover ? <div className="forge-thumb-wrap">{image}<span aria-hidden="true">▶</span></div> : image
 }
