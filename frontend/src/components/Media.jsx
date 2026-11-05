@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { imgSrc, gifSrc, isVideoSrc, isCustomEx, figureOf } from '../lib/exercises.js'
 import { useStore } from '../store/useStore.js'
 import { t, exerciseNameFor } from '../lib/i18n.js'
@@ -17,9 +17,72 @@ export default function Media(p) {
 
 function BuiltinVideo({ex,minimizable}) {
  const size=useStore(s=>s.S.gifSize),update=useStore(s=>s.update);
+ const body=useStore(s=>figureOf(s.S));
+ const [youtube,setYoutube]=useState(false);
  if(minimizable&&size==='off')return null;
  if(minimizable&&size==='mini')return <button className="forge-media-mini" onClick={()=>update(s=>{s.gifSize='full'})}><Thumb ex={ex}/><span>Ver demonstração <b>▶</b></span></button>;
- return <div className="forge-media-panel"><YouTubeDemo ex={ex}/>{minimizable&&<button className="forge-media-minimize" onClick={()=>update(s=>{s.gifSize='mini'})}>Recolher demonstração</button>}</div>
+ return <div className="forge-media-panel">
+  {ex.gif ? <>
+   <CatalogueAnimation key={body} ex={ex} body={body}/>
+   <details className="forge-video-alternative" onToggle={e=>setYoutube(e.currentTarget.open)}>
+    <summary>Vídeo explicativo no YouTube</summary>
+    {youtube&&<YouTubeDemo ex={ex}/>}
+   </details>
+  </> : <YouTubeDemo ex={ex}/>}
+  {minimizable&&<button className="forge-media-minimize" onClick={()=>update(s=>{s.gifSize='mini'})}>Recolher demonstração</button>}
+ </div>
+}
+
+// Use the exact, unmodified 180 px drawing shipped by the non-commercial fork.
+// Download only on an explicit tap; buffer the whole small clip once so loops do not seek
+// across the network. The still stays underneath until playback actually starts.
+function CatalogueAnimation({ex,body}) {
+ const [requested,setRequested]=useState(false),[playing,setPlaying]=useState(false);
+ const [ready,setReady]=useState(false),[failed,setFailed]=useState(false),[stillFailed,setStillFailed]=useState(false);
+ const [blocked,setBlocked]=useState(false);
+ const videoRef=useRef(null);
+ const animation=gifSrc(ex,body),isVideo=isVideoSrc(animation);
+ const clipSrc=useClipInMemory(requested&&isVideo?animation:null);
+ const name=exerciseNameFor(ex),meta=demoFor({},ex.id);
+ useEffect(()=>{
+  const pauseWhenHidden=()=>{if(document.hidden)setPlaying(false)};
+  document.addEventListener('visibilitychange',pauseWhenHidden);
+  return ()=>document.removeEventListener('visibilitychange',pauseWhenHidden);
+ },[]);
+ useEffect(()=>{
+  const video=videoRef.current;
+  if(!video)return;
+  if(!playing){video.pause();return;}
+  video.muted=true;video.defaultMuted=true;video.setAttribute('muted','');
+  const result=video.play();
+  result?.catch(()=>{setPlaying(false);setBlocked(true)});
+  return ()=>video.pause();
+ },[playing,clipSrc,failed]);
+ const toggle=()=>{
+  setBlocked(false);
+  if(failed){setFailed(false);setReady(false);setPlaying(true);setRequested(true);return;}
+  setRequested(true);setPlaying(p=>!p);
+ };
+ const onError=()=>{setFailed(true);setReady(false);setPlaying(false)};
+ const showMotion=!failed&&ready&&(isVideo||playing);
+ const action=failed?'Tentar movimento novamente':playing?'Pausar movimento':'Ver movimento';
+ return <section className="forge-demo forge-loop" aria-label={'Movimento: '+name}>
+  <div className="forge-demo-heading"><strong>Como executar</strong><span>ANIMAÇÃO DO EXERCÍCIO</span></div>
+  <button className="forge-loop-button" onClick={toggle} aria-label={action+': '+name} aria-pressed={playing}>
+   <span className="forge-loop-stage">
+    {!stillFailed?<img className="forge-loop-still" src={imgSrc(ex,body)} alt={name} onError={()=>setStillFailed(true)}/>:<Icon name="dumbbell"/>}
+    {requested&&isVideo&&clipSrc&&!failed&&<video ref={videoRef} className={'forge-loop-motion'+(showMotion?' visible':'')} src={clipSrc}
+     preload="auto" muted loop playsInline disablePictureInPicture aria-label={'Animação: '+name}
+     onPlaying={()=>{setReady(true);setBlocked(false)}} onError={onError}/>}
+    {requested&&!isVideo&&playing&&!failed&&<img className="forge-loop-motion visible" src={animation} alt={'Animação: '+name} onLoad={()=>setReady(true)} onError={onError}/>}
+   </span>
+   <span className="forge-loop-action"><Icon name={playing?'pause':'play'}/>{action}</span>
+  </button>
+  <p className="forge-loop-status" role="status">{failed?'Não foi possível carregar o movimento. A imagem continua disponível.':blocked?'Toque em Ver movimento para iniciar a reprodução.':playing&&!ready?'Carregando movimento…':playing?'Movimento em repetição · toque para pausar.':requested?'Movimento pausado.':'Toque para reproduzir aqui, sem sair do aplicativo.'}</p>
+  {meta?.tips&&<div className="forge-technique"><strong>{meta.variant}</strong><ul>{meta.tips.map(tip=><li key={tip}>{tip}</li>)}</ul></div>}
+  <small>Siga as séries, cargas e a respiração da sua ficha.</small>
+  <p className="forge-loop-credit">© Gym visual · openGym · <a href="./forge-sobre.html" target="_blank" rel="noopener noreferrer">Créditos e licença ↗</a></p>
+ </section>
 }
 
 // Big autoplaying animation; tap toggles to the still frame. `compact` shrinks it (superset cards).
