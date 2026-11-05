@@ -6,6 +6,7 @@ import Icon from './Icon.jsx'
 import YouTubeDemo from './YouTubeDemo.jsx'
 import {demoFor,thumbnailFor} from '../lib/forge-video.js'
 import CustomMedia, { CustomThumb } from './CustomMedia.jsx'
+import { libraryVideoFor } from '../lib/forge-library-video.js'
 
 // An exercise's picture, wherever one shows. A custom exercise goes to CustomMedia.jsx — its own
 // photo, GIF, video or link, from the local media store — and never through imgSrc/gifSrc, which
@@ -19,11 +20,12 @@ function BuiltinVideo({ex,minimizable}) {
  const size=useStore(s=>s.S.gifSize),update=useStore(s=>s.update);
  const body=useStore(s=>figureOf(s.S));
  const [youtube,setYoutube]=useState(false);
+ const libraryVideo=libraryVideoFor(ex,body);
  if(minimizable&&size==='off')return null;
  if(minimizable&&size==='mini')return <button className="forge-media-mini" onClick={()=>update(s=>{s.gifSize='full'})}><Thumb ex={ex}/><span>Ver demonstração <b>▶</b></span></button>;
  return <div className="forge-media-panel">
-  {ex.gif ? <>
-   <CatalogueAnimation key={body} ex={ex} body={body}/>
+  {ex.gif || libraryVideo ? <>
+   {libraryVideo ? <LibraryVideo key={body} ex={ex} body={body} media={libraryVideo}/> : <CatalogueAnimation key={body} ex={ex} body={body}/>}
    <details className="forge-video-alternative" onToggle={e=>setYoutube(e.currentTarget.open)}>
     <summary>Vídeo explicativo no YouTube</summary>
     {youtube&&<YouTubeDemo ex={ex}/>}
@@ -31,6 +33,39 @@ function BuiltinVideo({ex,minimizable}) {
   </> : <YouTubeDemo ex={ex}/>}
   {minimizable&&<button className="forge-media-minimize" onClick={()=>update(s=>{s.gifSize='mini'})}>Recolher demonstração</button>}
  </div>
+}
+
+function LibraryVideo({ex,body,media}) {
+ const [requested,setRequested]=useState(false),[failed,setFailed]=useState(false);
+ const [ready,setReady]=useState(false),[posterFailed,setPosterFailed]=useState(false);
+ const videoRef=useRef(null), name=exerciseNameFor(ex), meta=demoFor({},ex.id);
+ useEffect(()=>{
+  const pauseWhenHidden=()=>{if(document.hidden)videoRef.current?.pause()};
+  document.addEventListener('visibilitychange',pauseWhenHidden);
+  return ()=>{document.removeEventListener('visibilitychange',pauseWhenHidden);videoRef.current?.pause()};
+ },[]);
+ useEffect(()=>{
+  const video=videoRef.current;
+  if(requested&&!failed)autoplayMuted(video);
+  return ()=>video?.pause();
+ },[requested,failed]);
+ if(failed)return <>
+  <p className="forge-loop-status" role="status">O vídeo externo não carregou. Use a demonstração abaixo ou o YouTube.</p>
+  <button className="forge-media-minimize" onClick={()=>{setFailed(false);setReady(false);setRequested(false)}}>Tentar vídeo novamente</button>
+  {ex.gif&&<CatalogueAnimation ex={ex} body={body}/>}
+ </>;
+ return <section className="forge-demo forge-library" aria-label={'Vídeo: '+name}>
+  <div className="forge-demo-heading"><strong>Como executar</strong><span>VÍDEO DO EXERCÍCIO</span></div>
+  {!requested ? <button className="forge-video-cover forge-library-cover" onClick={()=>setRequested(true)} aria-label={'Ver vídeo: '+name}>
+   <img src={!posterFailed&&media.poster ? media.poster : imgSrc(ex,body)} alt={name} onError={()=>setPosterFailed(true)}/>
+   <span className="forge-play-circle" aria-hidden="true">▶</span><span className="forge-video-caption">Ver demonstração · dentro do FORGE</span>
+  </button> : <video ref={videoRef} className="forge-library-video" src={media.video} controls muted loop playsInline preload="metadata"
+   aria-label={'Demonstração: '+name} onPlaying={()=>setReady(true)} onError={()=>setFailed(true)}/>}
+  <p className="forge-loop-status" role="status">{!requested?'Toque para assistir. O vídeo usa sua conexão com a internet.':ready?'Use os controles para pausar ou ampliar.':'Carregando vídeo… Se não iniciar, toque em reproduzir.'}</p>
+  {meta?.tips&&<div className="forge-technique"><strong>{meta.variant}</strong><ul>{meta.tips.map(tip=><li key={tip}>{tip}</li>)}</ul></div>}
+  <small>Siga as séries, cargas e a respiração da sua ficha.</small>
+  <p className="forge-loop-credit">Biblioteca free-exercise-db-api · <a href="./forge-sobre.html" target="_blank" rel="noopener noreferrer">Fonte e condições das mídias ↗</a></p>
+ </section>
 }
 
 // Use the exact, unmodified 180 px drawing shipped by the non-commercial fork.

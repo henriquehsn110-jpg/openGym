@@ -1,0 +1,174 @@
+{
+  "repository": "https://github.com/michael-lemarec/free-exercise-db-api",
+  "revision": "38c5670c3210f69268a0255bdb2cb3edcb596c46",
+  "exercises": {
+    "9698": {
+      "expectedName": "dumbbell chest supported row",
+      "equipment": "dumbbell",
+      "sourceId": "0327",
+      "sourceName": "Dumbbell Incline Row",
+      "videos": {
+        "male": "https://pub-585d42eb1aa64a67aedf483ec328d3fe.r2.dev/exercise-videos/male/dumbbell-incline-row.mp4",
+        "female": "https://pub-585d42eb1aa64a67aedf483ec328d3fe.r2.dev/exercise-videos/female/dumbbell-incline-row.mp4"
+      },
+      "posters": {
+        "male": "https://pub-585d42eb1aa64a67aedf483ec328d3fe.r2.dev/exercise-posters/male/dumbbell-incline-row.jpg",
+        "female": "https://pub-585d42eb1aa64a67aedf483ec328d3fe.r2.dev/exercise-posters/female/dumbbell-incline-row.jpg"
+      }
+    },
+    "2291": {
+      "expectedName": "cable wide grip lat pulldown",
+      "equipment": "cable",
+      "sourceId": "drv-cable-bar-lateral-pulldown-wide-shoulder-grip",
+      "sourceName": "Wide Grip Cable Lat Pulldown",
+      "videos": {
+        "male": "https://pub-585d42eb1aa64a67aedf483ec328d3fe.r2.dev/exercise-videos/male/cable-bar-lateral-pulldown-wide-shoulder-grip.mp4",
+        "female": "https://pub-585d42eb1aa64a67aedf483ec328d3fe.r2.dev/exercise-videos/female/cable-bar-lateral-pulldown-wide-shoulder-grip.mp4"
+      },
+      "posters": {
+        "male": "https://pub-585d42eb1aa64a67aedf483ec328d3fe.r2.dev/exercise-posters/male/cable-bar-lateral-pulldown-wide-shoulder-grip.jpg",
+        "female": "https://pub-585d42eb1aa64a67aedf483ec328d3fe.r2.dev/exercise-posters/female/cable-bar-lateral-pulldown-wide-shoulder-grip.jpg"
+      }
+    },
+    "0334": {
+      "expectedName": "dumbbell lateral raise",
+      "equipment": "dumbbell",
+      "sourceId": "0334",
+      "sourceName": "Dumbbell Lateral Raise",
+      "videos": {
+        "male": "https://pub-585d42eb1aa64a67aedf483ec328d3fe.r2.dev/exercise-videos/male/dumbbell-lateral-raise.mp4",
+        "female": "https://pub-585d42eb1aa64a67aedf483ec328d3fe.r2.dev/exercise-videos/female/dumbbell-lateral-raise.mp4"
+      },
+      "posters": {
+        "male": "https://pub-585d42eb1aa64a67aedf483ec328d3fe.r2.dev/exercise-posters/male/dumbbell-lateral-raise.jpg",
+        "female": "https://pub-585d42eb1aa64a67aedf483ec328d3fe.r2.dev/exercise-posters/female/dumbbell-lateral-raise.jpg"
+      }
+    },
+    "0201": {
+      "expectedName": "cable pushdown",
+      "equipment": "cable",
+      "sourceId": "1723",
+      "sourceName": "Cable Triceps Pushdown",
+      "videos": {
+        "male": "https://pub-585d42eb1aa64a67aedf483ec328d3fe.r2.dev/exercise-videos/male/cable-triceps-pushdown.mp4",
+        "female": "https://pub-585d42eb1aa64a67aedf483ec328d3fe.r2.dev/exercise-videos/female/cable-triceps-pushdown.mp4"
+      },
+      "posters": {
+        "male": "https://pub-585d42eb1aa64a67aedf483ec328d3fe.r2.dev/exercise-posters/male/cable-triceps-pushdown.jpg",
+        "female": "https://pub-585d42eb1aa64a67aedf483ec328d3fe.r2.dev/exercise-posters/female/cable-triceps-pushdown.jpg"
+      }
+    },
+    "0599": {
+      "expectedName": "lever seated leg curl",
+      "equipment": "leverage machine",
+      "sourceId": "0599",
+      "sourceName": "Lever Seated Leg Curl",
+      "videos": {
+        "male": "https://pub-585d42eb1aa64a67aedf483ec328d3fe.r2.dev/exercise-videos/male/lever-seated-leg-curl.mp4",
+        "female": "https://pub-585d42eb1aa64a67aedf483ec328d3fe.r2.dev/exercise-videos/female/lever-seated-leg-curl.mp4"
+      },
+      "posters": {
+        "male": "https://pub-585d42eb1aa64a67aedf483ec328d3fe.r2.dev/exercise-posters/male/lever-seated-leg-curl.jpg",
+        "female": "https://pub-585d42eb1aa64a67aedf483ec328d3fe.r2.dev/exercise-posters/female/lever-seated-leg-curl.jpg"
+      }
+    },
+    "0585": {
+      "expectedName": "lever leg extension",
+      "equipment": "leverage machine",
+      "sourceId": "0585",
+      "sourceName": "Lever Leg Extension",
+      "videos": {
+        "male": "https://pub-585d42eb1aa64a67aedf483ec328d3fe.r2.dev/exercise-videos/male/lever-leg-extension.mp4",
+        "female": "https://pub-585d42eb1aa64a67aedf483ec328d3fe.r2.dev/exercise-videos/female/lever-leg-extension.mp4"
+      },
+      "posters": {
+        "male": "https://pub-585d42eb1aa64a67aedf483ec328d3fe.r2.dev/exercise-posters/male/lever-leg-extension.jpg",
+        "female": "https://pub-585d42eb1aa64a67aedf483ec328d3fe.r2.dev/exercise-posters/female/lever-leg-extension.jpg"
+      }
+    },
+    "0594": {
+      "expectedName": "lever seated calf raise",
+      "equipment": "leverage machine",
+      "sourceId": "0594",
+      "sourceName": "Lever Seated Calf Raise",
+      "videos": {
+        "male": "https://pub-585d42eb1aa64a67aedf483ec328d3fe.r2.dev/exercise-videos/male/lever-seated-calf-raise.mp4",
+        "female": "https://pub-585d42eb1aa64a67aedf483ec328d3fe.r2.dev/exercise-videos/female/lever-seated-calf-raise.mp4"
+      },
+      "posters": {
+        "male": "https://pub-585d42eb1aa64a67aedf483ec328d3fe.r2.dev/exercise-posters/male/lever-seated-calf-raise.jpg",
+        "female": "https://pub-585d42eb1aa64a67aedf483ec328d3fe.r2.dev/exercise-posters/female/lever-seated-calf-raise.jpg"
+      }
+    },
+    "0314": {
+      "expectedName": "dumbbell incline bench press",
+      "equipment": "dumbbell",
+      "sourceId": "0314",
+      "sourceName": "Dumbbell Incline Bench Press",
+      "videos": {
+        "male": "https://pub-585d42eb1aa64a67aedf483ec328d3fe.r2.dev/exercise-videos/male/dumbbell-incline-bench-press.mp4",
+        "female": "https://pub-585d42eb1aa64a67aedf483ec328d3fe.r2.dev/exercise-videos/female/dumbbell-incline-bench-press.mp4"
+      },
+      "posters": {
+        "male": "https://pub-585d42eb1aa64a67aedf483ec328d3fe.r2.dev/exercise-posters/male/dumbbell-incline-bench-press.jpg",
+        "female": "https://pub-585d42eb1aa64a67aedf483ec328d3fe.r2.dev/exercise-posters/female/dumbbell-incline-bench-press.jpg"
+      }
+    },
+    "1047": {
+      "expectedName": "cable close grip front lat pulldown",
+      "equipment": "cable",
+      "sourceId": "0974",
+      "sourceName": "Cable Close Grip Lat Pulldown",
+      "videos": {
+        "male": "https://pub-585d42eb1aa64a67aedf483ec328d3fe.r2.dev/exercise-videos/male/cable-close-grip-front-lat-pulldown.mp4",
+        "female": "https://pub-585d42eb1aa64a67aedf483ec328d3fe.r2.dev/exercise-videos/female/cable-close-grip-front-lat-pulldown.mp4"
+      },
+      "posters": {
+        "male": "https://pub-585d42eb1aa64a67aedf483ec328d3fe.r2.dev/exercise-posters/male/cable-close-grip-front-lat-pulldown.jpg",
+        "female": "https://pub-585d42eb1aa64a67aedf483ec328d3fe.r2.dev/exercise-posters/female/cable-close-grip-front-lat-pulldown.jpg"
+      }
+    },
+    "0180": {
+      "expectedName": "cable low seated row",
+      "equipment": "cable",
+      "sourceId": "0208",
+      "sourceName": "Seated Cable Row (V-Grip)",
+      "videos": {
+        "male": "https://pub-585d42eb1aa64a67aedf483ec328d3fe.r2.dev/exercise-videos/male/cable-straight-back-seated-row-v-grip.mp4",
+        "female": "https://pub-585d42eb1aa64a67aedf483ec328d3fe.r2.dev/exercise-videos/female/cable-straight-back-seated-row-v-grip.mp4"
+      },
+      "posters": {
+        "male": "https://pub-585d42eb1aa64a67aedf483ec328d3fe.r2.dev/exercise-posters/male/cable-straight-back-seated-row-v-grip.jpg",
+        "female": "https://pub-585d42eb1aa64a67aedf483ec328d3fe.r2.dev/exercise-posters/female/cable-straight-back-seated-row-v-grip.jpg"
+      }
+    },
+    "0294": {
+      "expectedName": "dumbbell biceps curl",
+      "equipment": "dumbbell",
+      "sourceId": "0294",
+      "sourceName": "Dumbbell Biceps Curl",
+      "videos": {
+        "male": "https://pub-585d42eb1aa64a67aedf483ec328d3fe.r2.dev/exercise-videos/male/dumbbell-biceps-curl.mp4",
+        "female": "https://pub-585d42eb1aa64a67aedf483ec328d3fe.r2.dev/exercise-videos/female/dumbbell-biceps-curl.mp4"
+      },
+      "posters": {
+        "male": "https://pub-585d42eb1aa64a67aedf483ec328d3fe.r2.dev/exercise-posters/male/dumbbell-biceps-curl.jpg",
+        "female": "https://pub-585d42eb1aa64a67aedf483ec328d3fe.r2.dev/exercise-posters/female/dumbbell-biceps-curl.jpg"
+      }
+    },
+    "1760": {
+      "expectedName": "dumbbell goblet squat",
+      "equipment": "dumbbell",
+      "sourceId": "1760",
+      "sourceName": "Dumbbell Goblet Squat",
+      "videos": {
+        "male": "https://pub-585d42eb1aa64a67aedf483ec328d3fe.r2.dev/exercise-videos/male/dumbbell-goblet-squat.mp4",
+        "female": "https://pub-585d42eb1aa64a67aedf483ec328d3fe.r2.dev/exercise-videos/female/dumbbell-goblet-squat.mp4"
+      },
+      "posters": {
+        "male": "https://pub-585d42eb1aa64a67aedf483ec328d3fe.r2.dev/exercise-posters/male/dumbbell-goblet-squat.jpg",
+        "female": "https://pub-585d42eb1aa64a67aedf483ec328d3fe.r2.dev/exercise-posters/female/dumbbell-goblet-squat.jpg"
+      }
+    }
+  }
+}

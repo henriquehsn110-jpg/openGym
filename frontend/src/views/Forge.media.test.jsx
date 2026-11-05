@@ -38,6 +38,7 @@ it('initializes an empty personal schedule and changes selected routine without 
 })
 it('opens the personal workout with a catalogue still and tap-to-play animation before YouTube',()=>{
  useStore.setState({S:freshState()});const app=mount(<ForgeWorkouts/>);
+ act(()=>app.host.querySelector('.forge-routine-picker button').click());
  expect(app.host.querySelector('.forge-exercise summary img').getAttribute('src')).toContain('exercise-media/still/');
  act(()=>{const details=app.host.querySelector('.forge-exercise');details.open=true;details.dispatchEvent(new Event('toggle'))});
  expect(app.host.querySelector('.forge-loop-button')).toBeTruthy();expect(app.host.querySelector('.forge-loop-still')).toBeTruthy();
