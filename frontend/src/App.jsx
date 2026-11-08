@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef } from 'react'
+import { useEffect, useLayoutEffect, useRef, lazy, Suspense } from 'react'
 import { HashRouter, Routes, Route, Navigate, useNavigate, useLocation, useNavigationType } from 'react-router-dom'
 import { useStore } from './store/useStore.js'
 import { useUI } from './store/useUI.js'
@@ -36,6 +36,8 @@ import Nutrition from './views/Nutrition.jsx'
 import ForgeHome from './views/ForgeHome.jsx'
 import ForgeTraining from './views/ForgeTraining.jsx'
 import ForgeBuilder from './views/ForgeBuilder.jsx'
+import ForgeStart from './views/ForgeStart.jsx'
+const ForgePdfImport=lazy(()=>import('./views/ForgePdfImport.jsx'))
 import ForgeWorkouts from './views/ForgeWorkouts.jsx'
 import ForgeFamily from './views/ForgeFamily.jsx'
 import RoutineEdit from './views/RoutineEdit.jsx'
@@ -219,6 +221,8 @@ function Shell() {
               <Route path="/nutrition" element={<Nutrition />} />
               <Route path="/training" element={<ForgeTraining />} />
               <Route path="/training/new" element={<ForgeBuilder />} />
+              <Route path="/training/start" element={<ForgeStart />} />
+              <Route path="/training/import" element={<Suspense fallback={<p>Preparando importação…</p>}><ForgePdfImport /></Suspense>} />
               <Route path="/my-training" element={<ForgeWorkouts />} />
               <Route path="/family" element={<ForgeFamily />} />
               <Route path="/plan" element={<Plan />} />

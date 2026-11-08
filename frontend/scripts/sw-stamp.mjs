@@ -18,7 +18,7 @@ const KEEP = /[\\/]src[\\/]instr[\\/]en\.js$/
 export function lazyAssets(bundle) {
   const out = []
   for (const [file, item] of Object.entries(bundle)) {
-    if (!/\.(?:js|css)$/.test(file)) continue
+    if (!/\.(?:js|css)$/.test(file) || file.startsWith('ocr/')) continue // Large OCR binaries load only when requested.
     const ids = item.type === 'chunk' ? (item.moduleIds?.length ? item.moduleIds : Object.keys(item.modules || {})) : []
     if (ids.length && ids.every(id => PACK.test(id) && !KEEP.test(id))) continue
     out.push('./' + file)
