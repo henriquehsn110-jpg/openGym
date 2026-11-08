@@ -1,22 +1,17 @@
 import library from './forge-library-videos.json'
 
 const normalize = value => String(value || '').trim().toLowerCase().replace(/\s+/g, ' ')
-const host = 'pub-585d42eb1aa64a67aedf483ec328d3fe.r2.dev'
-const safeMedia = (value, folder, extension) => {
-  try {
-    const url = new URL(value)
-    return url.protocol === 'https:' && url.hostname === host && !url.username && !url.password &&
-      url.pathname.startsWith('/' + folder + '/') && url.pathname.endsWith(extension) ? url.href : null
-  } catch { return null }
-}
+// Serve the licensed free clips with the app: no third-party CDN at playback time.
+const safeMedia = (value, id, extension) =>
+  value === './forge-media/ymove/' + id + extension ? value : null
 
 // The two catalogues reuse IDs for different movements. Never join by ID alone.
-// These twelve mappings were checked against movement, equipment and source metadata.
+// Match movement AND equipment, including the attachment and machine variant.
+// The free pulldown uses a triangle; the free pushdown uses a rope, not a bar.
 export function libraryVideoFor(ex, figure = 'male') {
   const item = library.exercises[ex?.id]
   if (!item || normalize(ex.n) !== item.expectedName || normalize(ex.eq) !== item.equipment) return null
-  const body = figure === 'female' ? 'female' : 'male'
-  const video = safeMedia(item.videos[body], 'exercise-videos', '.mp4')
+  const video = safeMedia(item.video, ex.id, '.mp4')
   if (!video) return null
-  return { video, poster: safeMedia(item.posters[body], 'exercise-posters', '.jpg'), sourceName: item.sourceName }
+  return { video, poster: safeMedia(item.poster, ex.id, '.jpg'), sourceName: item.sourceName }
 }

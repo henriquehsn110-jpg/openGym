@@ -30,3 +30,6 @@ frontend/bundle-size.json
 
 # Local planning notes
 docs/superpowers/plans/
+
+# Downloaded, hash-checked Your Move assets are staged by the frontend build.
+/frontend/public/forge-media/ymove/

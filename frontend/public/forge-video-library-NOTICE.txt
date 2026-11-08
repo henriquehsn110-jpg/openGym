@@ -1,31 +1,23 @@
-free-exercise-db-api
-https://github.com/michael-lemarec/free-exercise-db-api
-Pinned revision: 38c5670c3210f69268a0255bdb2cb3edcb596c46
+Your Move — seven free exercise clips integrated into FORGE
+Source and license: https://ymove.app/free-exercise-videos
+Checked: 2026-11-07
 
-Only curated movement mappings and public playback URLs are included.
-No video files from this library are redistributed by this repository.
-The following MIT license covers upstream code and metadata, not a verified
-license grant for third-party media. Upstream discloses that the videos were
-purchased from a seller and their original source is unknown.
+The publisher permits downloading and using these free clips in apps, websites,
+social media and client materials, including commercial use, without payment
+or signup. Attribution is appreciated, not required.
+Do not sell or redistribute the clips as a standalone product or video library.
+The videos remain Your Move content and are not covered by the code's AGPL.
 
-MIT License
+Source URLs and SHA-256 hashes of the original app assets:
+frontend/src/lib/forge-library-videos.json
 
-Copyright (c) 2026 Arham Wani
+Original 720 x 1280 resolution, framing, credits and duration are preserved.
+Original H.264 files are downloaded and verified during build, not at runtime.
+Playback starts muted.
+The original male or female demonstrator is retained for each clip.
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+Mappings: dumbbell lateral raise, dumbbell goblet squat, triangle lat pulldown,
+seated V-bar cable row, seated leg extension, barbell bench press, angled leg press.
+The triangle pulldown is NOT mapped to wide-grip pulldown.
+The free rope pushdown is NOT mapped to bar pushdown.
+Other exercises keep their existing YouTube demonstrations.

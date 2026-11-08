@@ -24,7 +24,7 @@ function BuiltinVideo({ex,minimizable}) {
  if(minimizable&&size==='off')return null;
  if(minimizable&&size==='mini')return <button className="forge-media-mini" onClick={()=>update(s=>{s.gifSize='full'})}><Thumb ex={ex}/><span>Ver demonstração <b>▶</b></span></button>;
  return <div className="forge-media-panel">
-  {ex.gif || libraryVideo ? <>
+  {!libraryVideo && demoFor({},ex.id) ? <YouTubeDemo ex={ex}/> : ex.gif || libraryVideo ? <>
    {libraryVideo ? <LibraryVideo key={body} ex={ex} body={body} media={libraryVideo}/> : <CatalogueAnimation key={body} ex={ex} body={body}/>}
    <details className="forge-video-alternative" onToggle={e=>setYoutube(e.currentTarget.open)}>
     <summary>Vídeo explicativo no YouTube</summary>
@@ -50,9 +50,9 @@ function LibraryVideo({ex,body,media}) {
   return ()=>video?.pause();
  },[requested,failed]);
  if(failed)return <>
-  <p className="forge-loop-status" role="status">O vídeo externo não carregou. Use a demonstração abaixo ou o YouTube.</p>
+  <p className="forge-loop-status" role="status">O vídeo não carregou. Assista à explicação no YouTube abaixo.</p>
   <button className="forge-media-minimize" onClick={()=>{setFailed(false);setReady(false);setRequested(false)}}>Tentar vídeo novamente</button>
-  {ex.gif&&<CatalogueAnimation ex={ex} body={body}/>}
+  <YouTubeDemo ex={ex}/>
  </>;
  return <section className="forge-demo forge-library" aria-label={'Vídeo: '+name}>
   <div className="forge-demo-heading"><strong>Como executar</strong><span>VÍDEO DO EXERCÍCIO</span></div>
@@ -64,7 +64,7 @@ function LibraryVideo({ex,body,media}) {
   <p className="forge-loop-status" role="status">{!requested?'Toque para assistir. O vídeo usa sua conexão com a internet.':ready?'Use os controles para pausar ou ampliar.':'Carregando vídeo… Se não iniciar, toque em reproduzir.'}</p>
   {meta?.tips&&<div className="forge-technique"><strong>{meta.variant}</strong><ul>{meta.tips.map(tip=><li key={tip}>{tip}</li>)}</ul></div>}
   <small>Siga as séries, cargas e a respiração da sua ficha.</small>
-  <p className="forge-loop-credit">Biblioteca free-exercise-db-api · <a href="./forge-sobre.html" target="_blank" rel="noopener noreferrer">Fonte e condições das mídias ↗</a></p>
+  <p className="forge-loop-credit">Your Move · <a href="./forge-sobre.html" target="_blank" rel="noopener noreferrer">Fonte e condições das mídias ↗</a></p>
  </section>
 }
 

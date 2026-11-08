@@ -53,7 +53,7 @@ it('buffers on tap, loops inline, and pauses/resumes without downloading again',
 
 it('keeps the same exercise and selected figure in still and animation', async () => {
   state.S.exFigure = 'female'
-  const exercise = EXIDX['0289']
+  const exercise = EXIDX['0001']
   mount(exercise)
   expect(host.querySelector('.forge-loop-still').getAttribute('src')).toBe(imgSrc(exercise, 'female'))
   tap(); await settle()
