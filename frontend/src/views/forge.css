@@ -13,3 +13,30 @@
 @media(max-width:600px){.forge-edition{padding:0 17px!important;min-height:48px;align-items:center!important}.forge-edition a{display:none!important}.forge-edition a[href="#/family"]{display:inline-flex!important;min-height:44px;font-size:12px}.forge-training{padding-top:18px}.forge-training>.forge-eyebrow{margin-bottom:10px}.forge-training .forge-title{margin-bottom:16px}.forge-training .forge-title h1{font-size:32px;letter-spacing:-1px}.forge-training .forge-title p{font-size:13px;line-height:1.5;margin-top:8px}.forge-training .forge-mark{display:none}.forge-training .forge-tabs{margin-bottom:14px}.forge-training .forge-routine-picker{margin:12px 0 18px}.forge-training .forge-routine-picker button{min-height:84px;padding:12px;gap:5px}.forge-training .forge-routine-picker strong{font-size:13px}.forge-training .forge-workout-top{margin:14px 0;gap:8px}.forge-training .forge-workout-top h2{font-size:23px}.forge-training .forge-workout-top p{margin:6px 0}.forge-training .forge-notice{margin-bottom:14px}.forge-training .forge-workout-top .forge-eyebrow{font-size:9px;margin-bottom:5px}.forge-quick-links{gap:4px 18px}.forge-footnote>a,.forge-card>a{padding:4px 0}#tabbar{background:#203d32!important;border-color:#61745c;backdrop-filter:none;-webkit-backdrop-filter:none}#tabbar button{font-size:11px;color:#c8d3c1;min-height:48px}#tabbar button .icn{color:inherit}#tabbar button.on{color:#d7ee82}#app.vfade{animation:none!important}}
 
 .forge-install{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;background:#e3e9d7;border:1px solid var(--f-line);border-radius:16px;padding:18px;margin:18px 0}.forge-install strong{font-size:14px}.forge-install p{font-size:12px;line-height:1.7;color:var(--f-muted);margin:6px 0 0}.forge-install>.forge-btn{flex-shrink:0}.forge-install-help{flex:0 0 100%;border-top:1px solid #c3ceb5;padding-top:14px}.forge-install-help h3{margin:0 0 12px;font-size:16px}.forge-install-help ol{padding-left:20px;font-size:13px;line-height:1.8}.forge-install-help li{margin-bottom:10px}.forge-install-help .forge-text-btn{min-height:44px}
+
+/* Narrow phones and enlarged display settings: let text reflow instead of competing
+   with a decorative mark or forcing navigation beyond the available width. */
+.forge-page{width:100%;min-width:0;min-height:100vh;min-height:100dvh}
+.forge-title>div{flex:1;min-width:0}
+.forge-title h1,.forge-page h2,.forge-page h3,.forge-page p,.forge-page legend{overflow-wrap:anywhere}
+.forge-mark{flex-shrink:0}
+.forge-tabs a,.forge-btn,.forge-card-grid>*{min-width:0;max-width:100%}
+.forge-btn{overflow-wrap:anywhere;text-align:center}
+.forge-editor fieldset{min-width:0}
+.forge-page legend{max-width:100%;white-space:normal}
+.forge-editor input,.forge-editor select,.forge-editor textarea{min-width:0;max-width:100%}
+@media(max-width:600px){
+ .forge-title{display:block}
+ .forge-title .forge-mark{display:none}
+ .forge-title h1{font-size:32px;font-size:clamp(28px,8vw,38px);letter-spacing:-1px;line-height:1.12}
+ .forge-title p{max-width:none}
+ .forge-tabs{border-radius:18px}
+ .forge-tabs a{padding:10px 6px;overflow-wrap:anywhere}
+ #tabbar{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));align-items:end;padding:6px 4px calc(6px + var(--sab));background:#203d32!important}
+ #tabbar button{min-width:0;width:100%;min-height:64px;padding:3px 1px;gap:4px;line-height:1.25;justify-content:center;color:#e0e8d9}
+ #tabbar button>span:last-child{max-width:100%;min-height:2.5em;white-space:normal;overflow-wrap:anywhere;text-align:center}
+ #tabbar button .icn{font-size:23px}
+ #tabbar button.start{margin-top:0}
+ #tabbar button.start .cir{width:44px;height:44px;min-height:44px;flex-shrink:0}
+ #tabbar button.start .cir .icn{font-size:24px}
+}
