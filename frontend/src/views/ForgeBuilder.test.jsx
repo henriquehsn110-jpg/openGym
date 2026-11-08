@@ -16,7 +16,7 @@ const select=(text,value)=>act(()=>{const e=label(text).querySelector('select');
 const generate=()=>act(()=>host.querySelector('form').dispatchEvent(new Event('submit',{bubbles:true,cancelable:true})))
 const complete=()=>{click('Tenho 18');select('Condição atual','none');click('Halteres');generate()}
 it('does not mutate records when generating; applies only after explicit review without changing schedule',()=>{
- const before=JSON.stringify(store.S);complete();expect(host.querySelectorAll('table')).toHaveLength(3);expect(JSON.stringify(store.S)).toBe(before)
+ const before=JSON.stringify(store.S);complete();expect(host.querySelectorAll('table[aria-label^="Exercícios de "]')).toHaveLength(3);expect(JSON.stringify(store.S)).toBe(before)
  const apply=[...host.querySelectorAll('button')].find(b=>b.textContent==='Adicionar esta ficha ao meu plano');expect(apply.disabled).toBe(true)
  click('Revisei os exercícios');expect(apply.disabled).toBe(false);act(()=>apply.click());expect(store.S.routines).toHaveLength(4);expect(store.S.week).toEqual({2:['old']});expect(store.S.workouts).toEqual([{id:'done'}]);expect(store.S.routines[0].ex[0].weight).toBe(25);expect(host.textContent).toContain('Ficha adicionada.')
 })
@@ -30,5 +30,17 @@ it('refuses automatic generation for restrictions and missing equipment',()=>{
 it('generates seven selected days with separate strength and recovery prescriptions',()=>{
  click('Tenho 18');select('Condição atual','none');select('Experiência atual','regular');click('Halteres')
  for(const day of ['Ter','Qui','Sáb','Dom'])click(day)
- generate();expect(host.querySelectorAll('table')).toHaveLength(7);expect(host.textContent).toContain('6 de musculação e 1 de recuperação ativa');expect(host.textContent).toContain('Caminhada leve');expect(host.textContent).not.toContain('undefined');expect(host.textContent).not.toContain('NaN')
+ generate();expect(host.querySelectorAll('table[aria-label^="Exercícios de "]')).toHaveLength(7);expect(host.textContent).toContain('6 de musculação e 1 de recuperação ativa');expect(host.textContent).toContain('Caminhada leve');expect(host.textContent).not.toContain('undefined');expect(host.textContent).not.toContain('NaN')
+})
+
+it('lets a person request five strength sessions and explains muscle coverage and effort before saving',()=>{
+ click('Tenho 18');select('Condição atual','none');select('Experiência atual','regular');click('Halteres');for(const day of ['Ter','Qui'])click(day)
+ select('Sessões de musculação por semana','5');generate();expect(host.textContent).toContain('5 de musculação e 0 de recuperação ativa');expect(host.querySelector('[aria-label="Cobertura muscular semanal"]')).not.toBeNull();expect(host.textContent).toContain('Séries secundárias');expect(host.textContent).toContain('Tríceps');expect(host.textContent).toContain('Glúteos');expect(host.textContent).toContain('2–3');expect(store.update).not.toHaveBeenCalled()
+})
+it('invalidates the proposal when the requested strength count changes',()=>{
+ complete();select('Sessões de musculação por semana','2');expect(host.querySelector('table')).toBeNull();generate();expect(host.textContent).toContain('2 de musculação e 1 de recuperação ativa')
+})
+it('reuses a previous intake for review without silently accepting current health screening or altering the saved plan',()=>{
+ store.S.forgeGeneratedPlans=[{version:2,intake:{name:'Anterior',adult:true,screen:'none',goal:'fatloss',experience:'regular',minutes:45,days:[1,2,3,4,5],equipment:['dumbbell'],exclude:[]}}];act(()=>root.render(<MemoryRouter><ForgeBuilder/></MemoryRouter>));const before=JSON.stringify(store.S)
+ act(()=>[...host.querySelectorAll('button')].find(b=>b.textContent==='Usar respostas da última ficha').click());expect(label('Tenho 18').querySelector('input').checked).toBe(false);expect(label('Condição atual').querySelector('select').value).toBe('');expect(label('Objetivo principal').querySelector('select').value).toBe('fatloss');expect(JSON.stringify(store.S)).toBe(before)
 })
