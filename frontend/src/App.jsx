@@ -35,6 +35,7 @@ import Plan from './views/Plan.jsx'
 import Nutrition from './views/Nutrition.jsx'
 import ForgeHome from './views/ForgeHome.jsx'
 import ForgeTraining from './views/ForgeTraining.jsx'
+import ForgeBuilder from './views/ForgeBuilder.jsx'
 import ForgeWorkouts from './views/ForgeWorkouts.jsx'
 import ForgeFamily from './views/ForgeFamily.jsx'
 import RoutineEdit from './views/RoutineEdit.jsx'
@@ -217,6 +218,7 @@ function Shell() {
               {S.checkIn !== false && <Route path="/checkin" element={<CheckIn />} />}
               <Route path="/nutrition" element={<Nutrition />} />
               <Route path="/training" element={<ForgeTraining />} />
+              <Route path="/training/new" element={<ForgeBuilder />} />
               <Route path="/my-training" element={<ForgeWorkouts />} />
               <Route path="/family" element={<ForgeFamily />} />
               <Route path="/plan" element={<Plan />} />

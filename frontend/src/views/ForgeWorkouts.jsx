@@ -19,6 +19,7 @@ export default function ForgeWorkouts(){
  return <main className="forge-page forge-training">
   <div className="forge-eyebrow">FICHA E DEMONSTRAÇÕES</div><header className="forge-title"><div><h1>Meu treino.</h1><p>Escolha a sessão e toque no exercício para ver a execução.</p></div><span className="forge-mark" aria-hidden="true">F<span>↗</span></span></header>
   <div className="forge-tabs"><Link to="/home">Meu dia</Link><Link className="selected" to="/my-training">Treino</Link><Link to="/nutrition">Alimentação</Link></div>
+<p><Link className="forge-btn forge-secondary" to="/training/new">Gerar ficha por questionário →</Link></p>
   {S.active&&<aside className="forge-session-notice"><strong>{stale?'Há uma sessão antiga em aberto.':'Você tem um treino em andamento.'}</strong><p>{stale?'Ela foi preservada. Abra a sessão para conferir e finalizar, ou descartá-la pelo menu do treino.':'Retome a sessão antes de iniciar outra.'}</p><Link className="forge-btn forge-secondary" to="/workout">Retomar sessão →</Link></aside>}
   <div className="forge-routine-picker" aria-label="Escolher treino">{list.map((r,i)=><button key={r.id} aria-pressed={selected?.id===r.id} className={selected?.id===r.id?'selected':''} onClick={()=>setParams({routine:r.id},{replace:true})}><small>{daysFor(r)||'ROTINA '+(i+1)}</small><strong>{r.name}</strong><span>{r.ex.length} exercícios</span></button>)}</div>
   {selected ? <>
