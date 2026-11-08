@@ -27,3 +27,8 @@ it('refuses automatic generation for restrictions and missing equipment',()=>{
  click('Tenho 18');select('Condição atual','review');click('Halteres');generate();expect(host.querySelector('table')).toBeNull();expect(host.querySelector('[role=alert]').textContent).toContain('avaliação profissional')
  select('Condição atual','none');click('Halteres');generate();expect(host.querySelector('[role=alert]').textContent).toContain('halteres, elástico ou polia')
 })
+it('generates seven selected days with separate strength and recovery prescriptions',()=>{
+ click('Tenho 18');select('Condição atual','none');select('Experiência atual','regular');click('Halteres')
+ for(const day of ['Ter','Qui','Sáb','Dom'])click(day)
+ generate();expect(host.querySelectorAll('table')).toHaveLength(7);expect(host.textContent).toContain('6 de musculação e 1 de recuperação ativa');expect(host.textContent).toContain('Caminhada leve');expect(host.textContent).not.toContain('undefined');expect(host.textContent).not.toContain('NaN')
+})

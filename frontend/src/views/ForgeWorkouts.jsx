@@ -35,7 +35,7 @@ export default function ForgeWorkouts(){
 function ForgeExercise({e,i,rid,defaultRest}){
  const [open,setOpen]=useState(false);const ex=exOr(e.id),meta=FORGE_DEMOS[e.id];const reps=e.repsMin&&e.repsMax?e.repsMin+'–'+e.repsMax:e.reps||'—';
  return <details className="forge-exercise" onToggle={event=>setOpen(event.currentTarget.open)}>
-  <summary><span className="forge-ex-number">{String(i+1).padStart(2,'0')}</span><Thumb ex={ex}/><span className="forge-ex-body"><strong>{meta?.name||exerciseNameFor(ex)}</strong><small>{meta?.variant||'Consulte a execução'}</small><span className="forge-prescription"><b>{e.sets} séries × {reps}{e.side?' / lado':''}</b><span>{e.restSec||defaultRest||90}s de descanso</span></span></span><span className="forge-expand" aria-hidden="true">＋</span></summary>
+  <summary><span className="forge-ex-number">{String(i+1).padStart(2,'0')}</span><Thumb ex={ex}/><span className="forge-ex-body"><strong>{meta?.name||exerciseNameFor(ex)}</strong><small>{meta?.variant||'Consulte a execução'}</small><span className="forge-prescription"><b>{e.mode==='cardio'?e.min+' min de atividade leve':<>{e.sets} séries × {reps}{e.side?' / lado':''}</>}</b>{e.mode!=='cardio'&&<span>{e.restSec||defaultRest||90}s de descanso</span>}</span></span><span className="forge-expand" aria-hidden="true">＋</span></summary>
   {open&&<div className="forge-exercise-inside"><Media ex={ex}/>{e.note&&<p className="forge-ex-note"><strong>Na sua ficha</strong>{e.note}</p>}<Link className="forge-text-btn" to={'/plan/r/'+rid}>Ajustar prescrição →</Link></div>}
  </details>
 }

@@ -1,7 +1,7 @@
 import {EXIDX} from './exercises.js'
 import {uid,todayISO} from './format.js'
 
-export const BUILDER_VERSION=1
+export const BUILDER_VERSION=2
 export const BUILDER_GOALS={general:'Saúde e condicionamento',restart:'Retomar com constância',fatloss:'Reduzir gordura',muscle:'Ganhar massa muscular',strength:'Ganhar força'}
 export const BUILDER_SOURCES=[{title:'ACSM · Diretriz de treinamento resistido 2026',url:'https://acsm.org/resistance-training-guidelines-update-2026/'},{title:'Posicionamento completo · Currier et al., 2026',url:'https://pmc.ncbi.nlm.nih.gov/articles/PMC12965823/'}]
 // Curated movements. Never join external catalogues by reused IDs.
@@ -33,8 +33,7 @@ export function validateIntake(a){
  if(a.screen!=='none')throw Error('Dor, lesão, gestação, pós-parto ou recomendação de adaptação individual precisam de avaliação profissional. Não geramos automaticamente uma ficha nessas situações.')
  if(!BUILDER_GOALS[a.goal]||!['new','returning','regular'].includes(a.experience))throw Error('Escolha objetivo e experiência.')
  if(![30,45,60].includes(Number(a.minutes)))throw Error('Escolha 30, 45 ou 60 minutos.')
- if(!Array.isArray(a.days)||a.days.length<2||a.days.length>4||new Set(a.days).size!==a.days.length||a.days.some(d=>!Number.isInteger(d)||d<0||d>6))throw Error('Selecione de 2 a 4 dias diferentes por semana.')
- if(a.days.length<4&&a.days.some(d=>a.days.includes((d+1)%7)))throw Error('Para 2 ou 3 treinos de corpo inteiro, escolha dias com pelo menos um dia de intervalo, inclusive na virada da semana.')
+ if(!Array.isArray(a.days)||a.days.length<1||a.days.length>7||new Set(a.days).size!==a.days.length||a.days.some(d=>!Number.isInteger(d)||d<0||d>6))throw Error('Selecione de 1 a 7 dias diferentes por semana.')
  if(!Array.isArray(a.equipment)||!a.equipment.some(e=>['dumbbell','band','cable'].includes(e)))throw Error('Para incluir puxadas, informe ao menos halteres, elástico ou polia. Esta versão não gera uma ficha completa apenas com peso corporal.')
  if(a.equipment.some(e=>!['dumbbell','band','bench','cable','machines'].includes(e)))throw Error('Equipamento não reconhecido.')
  if(!Array.isArray(a.exclude)||a.exclude.some(k=>!MOVES[k]))throw Error('Exclusão de exercício inválida.')
@@ -55,13 +54,29 @@ export function generateProgram(raw){
  const lower=[squat,hinge,optional('legcurl'),optional('calf'),optional('core')].filter(Boolean)
  const full=unique([squat,press,hinge,row,...extras])
  const days=[1,2,3,4,5,6,0].filter(d=>a.days.includes(d))
+ // Choose full-body sessions that are separated even across Sunday/Monday.
+ const adjacent=(x,y)=>(x+1)%7===y||(y+1)%7===x
+ let spaced=[]
+ for(let mask=1;mask<(1<<days.length);mask++){
+  const subset=days.filter((d,i)=>mask&(1<<i))
+  if(subset.length>3||subset.some((d,i)=>subset.slice(i+1).some(e=>adjacent(d,e))))continue
+  if(subset.length>spaced.length)spaced=subset
+ }
+ const split=days.length===2&&adjacent(...days)||experienced&&days.length>=4
+ let strengthDays=split?days.slice():spaced
+ if(split&&days.length%2===1)strengthDays=days.filter((d,i)=>i!==days.length-1)
+ const strengthCount=strengthDays.length
  const notes=[]
+ if(days.length===1)notes.push('Um dia disponível é um começo válido. Esta frequência não equivale à recomendação de trabalhar os grandes grupos ao menos duas vezes na semana; considere ampliar quando possível.')
+ if(split&&strengthCount===2)notes.push('Os dois dias consecutivos foram divididos entre superiores e inferiores. Cada região recebe uma sessão nesta semana; quando possível, dias espaçados permitem duas sessões de corpo inteiro.')
+ if(strengthCount<days.length)notes.push(`${strengthCount} sessões de musculação e ${days.length-strengthCount} de recuperação ativa. Dias selecionados são dias de atividade; recuperação ativa não conta como séries de musculação. A escolha evita repetir os mesmos grupos em dias seguidos, inclusive na virada da semana.`)
+ if(!experienced&&days.length>=4)notes.push('Para quem começa ou retorna, mantemos até três sessões de corpo inteiro e usamos os outros dias para atividade leve. Mais dias disponíveis não exigem mais sessões pesadas.')
  if(a.experience!=='regular')notes.push('Comece com volume moderado e esforço confortável. Retome gradualmente; o objetivo força não exige cargas máximas nesta fase.')
  if(a.goal==='fatloss')notes.push('A musculação ajuda a preservar força e massa muscular. Este programa não calcula déficit energético nem promete perda de gordura; caminhada e alimentação podem complementar a rotina.')
- const make=(keys,index)=>{
+ const make=(keys,index,splitSession=false)=>{
   let chosen=unique(keys)
-  if(days.length<4&&a.minutes===30)chosen=[squat,press,hinge,row,extras[index%extras.length]].filter(Boolean)
-  const initial=a.experience==='regular'&&a.goal==='muscle'?3:2
+  if(!splitSession&&a.minutes===30)chosen=[squat,press,hinge,row,extras[index%extras.length]].filter(Boolean)
+  const initial=experienced&&a.goal==='muscle'&&strengthCount<6?3:2
   const ex=chosen.map(k=>{const [id,label,group,requires]=MOVES[k];if(!EXIDX[id])throw Error('Exercício indisponível no catálogo: '+label)
    const compound=[squat,hinge,press,row,'pulldown'].includes(k),core=k==='core'
    return {id,sets:initial,reps:core?6:strong&&compound?6:8,repsMin:core?6:strong&&compound?6:8,repsMax:core?10:strong&&compound?8:12,restSec:core?60:strong&&compound?180:compound?120:75,prog:'off',...(core?{side:true}:{}),note:(core?'Repetições por lado. ':'')+'Escolha uma carga ou dificuldade que permita execução controlada, respiração contínua e '+(experienced?'2–3':'3–4')+' repetições ainda possíveis. Pare se surgir dor.',builder:{key:k,label,group,requires}}
@@ -72,14 +87,22 @@ export function generateProgram(raw){
    const e=[...ex].reverse().find(e=>e.sets===Math.max(...ex.map(x=>x.sets)));e.sets--
   }
   if(estimate()>a.minutes)throw Error('Não foi possível incluir os movimentos no tempo informado. Escolha uma sessão mais longa.')
-  return {id:'preview-'+index,name:days.length===4?(index%2?'Inferiores ':'Superiores ')+(index<2?'A':'B'):'Corpo inteiro '+String.fromCharCode(65+index),ex,estimatedMinutes:estimate()}
+  return {id:'preview-'+index,name:splitSession?(index%2?'Inferiores ':'Superiores ')+String.fromCharCode(65+Math.floor(index/2)):'Corpo inteiro '+String.fromCharCode(65+index),ex,estimatedMinutes:estimate()}
  }
- const routines=days.map((d,i)=>make(days.length===4?(i%2?lower:upper):full,i))
- const volume={};for(const r of routines)for(const e of r.ex)volume[e.builder.group]=(volume[e.builder.group]||0)+e.sets
+ const recovery=()=>{
+  const duration=experienced?Math.min(30,a.minutes-7):Math.min(20,a.minutes-7)
+  return {id:'preview-recovery',name:'Recuperação ativa',estimatedMinutes:duration+7,recovery:true,ex:[{id:'2258',mode:'cardio',sets:1,min:duration,speed:0,restSec:0,prog:'off',note:'Caminhada em local plano e seguro, em ritmo leve que permita conversar confortavelmente. Comece com menos minutos se necessário. Não é um dia de treino pesado. Se precisar de repouso ou sentir desconforto, descanse; não há obrigação de completar a duração.',builder:{key:'walk',label:'Caminhada leve',group:'Recuperação ativa',requires:[]}}]}
+ }
+ let strengthIndex=0
+ const routines=days.map((d,i)=>{
+  if(!strengthDays.includes(d))return {...recovery(),id:'preview-recovery-'+i}
+  const index=strengthIndex++;return make(split?(index%2?lower:upper):full,index,split)
+ })
+ const volume={};for(const r of routines)for(const e of r.ex.filter(e=>e.mode!=='cardio'))volume[e.builder.group]=(volume[e.builder.group]||0)+e.sets
  if(routines.some(r=>r.ex.some(e=>e.sets<2)))notes.push('O limite de tempo reduziu alguns exercícios a uma série. Este é um ponto de partida de menor volume; sessões mais longas permitem mais séries.')
  if(a.goal==='muscle')notes.push('Estudos favorecem volumes maiores, frequentemente cerca de 10 séries por grupo por semana. O volume inicial mostrado pode ser menor; aumente gradualmente conforme recuperação e tempo, sem tratar 10 séries como mínimo obrigatório.')
  notes.push('A estimativa inclui 7 minutos para aquecimento e séries leves de aproximação, além de execução, descansos e trocas. Filas e montagem de equipamentos podem aumentar a duração.')
- return {version:BUILDER_VERSION,createdAt:new Date().toISOString(),intake:a,routines,days,volume,notes,progression:'Quando completar todas as séries no topo da faixa, com execução consistente e repetições em reserva por duas sessões, aumente a menor carga disponível e retorne ao início da faixa. Se não houver carga maior, aumente repetições dentro da faixa. Sem aumento automático de peso. Se a recuperação cair, reduza esforço/volume e reavalie.',review:'Reavalie em 4–6 semanas, ou antes se houver desconforto ou recuperação insuficiente. Esses prazos e as faixas de esforço são escolhas conservadoras do aplicativo, não limites clínicos validados.'}
+ return {strengthCount,recoveryCount:days.length-strengthCount,version:BUILDER_VERSION,createdAt:new Date().toISOString(),intake:a,routines,days,volume,notes,progression:'Quando completar todas as séries no topo da faixa, com execução consistente e repetições em reserva por duas sessões, aumente a menor carga disponível e retorne ao início da faixa. Se não houver carga maior, aumente repetições dentro da faixa. Sem aumento automático de peso. Se a recuperação cair, reduza esforço/volume e reavalie.',review:'Reavalie em 4–6 semanas, ou antes se houver desconforto ou recuperação insuficiente. Esses prazos e as faixas de esforço são escolhas conservadoras do aplicativo, não limites clínicos validados.'}
 }
 export function applyGeneratedProgram(s,p,schedule=false){
  if(s.active)throw Error('Finalize a sessão em andamento antes de aplicar uma nova ficha.')
