@@ -50,7 +50,7 @@ it('preserves existing schedules and old active sessions while offering resume',
  expect(app.host.textContent).toContain('sessão antiga');expect(app.host.textContent).not.toContain('Iniciar treino');expect(JSON.stringify(useStore.getState().S)).toBe(before);app.close()
 })
 it('shares a clean URL without profile or workout data',()=>{
- useStore.setState({S:{...freshState(),workouts:[{id:'private'}],forgeNutrition:[{text:'private meal'}]}});const app=mount(<ForgeFamily/>);expect(familyAppUrl()).toBe(window.location.origin+window.location.pathname+'#/family');expect(app.host.textContent).toContain('não tem contas');expect(app.host.textContent).not.toContain('private');app.close()
+ useStore.setState({S:{...freshState(),workouts:[{id:'private'}],forgeNutrition:[{text:'private meal'}]}});const app=mount(<ForgeFamily/>);expect(familyAppUrl()).toBe(window.location.origin+window.location.pathname+'?app=family-private-v3#/family');expect(app.host.textContent).toContain('não tem contas');expect(app.host.textContent).not.toContain('private');app.close()
 })
 
 it('honours a linked session even when it is not the next scheduled day',()=>{

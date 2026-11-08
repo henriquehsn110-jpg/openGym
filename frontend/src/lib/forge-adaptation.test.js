@@ -1,14 +1,9 @@
 import {expect,it} from 'vitest'
 import {goalStatus,createAdaptation,applyAdaptation} from './forge-adaptation.js'
-import {TEMPLATE,LEGACY_TEMPLATE} from './forge-meals.js'
 import {ensureForgeMeals} from './forge-profile.js'
 const base=()=>({unit:'kg',routines:[{id:'a',name:'Superiores A',ex:[{id:'0289',sets:2,reps:8,repsMin:8,repsMax:12,restSec:120,weight:20}]}],week:{1:['a']},workouts:[],forgeGoal:{id:'g',focus:'fatloss',metric:'weight',direction:'down',target:88,since:'2026-11-01T12:00:00.000Z'},forgeCheckins:[{id:'c',goalId:'g',value:90,recovery:'good',pain:false,reached:true}]})
-it('upgrades old meals without overwriting personal notes or restoring removed meals',()=>{
- const s={forgeNutrition:structuredClone(LEGACY_TEMPLATE).slice(0,6)};s.forgeNutrition[0].text='Minha porção personalizada';ensureForgeMeals(s)
- expect(s.forgeNutrition).toHaveLength(6);expect(s.forgeNutrition[0].text).toBe('Minha porção personalizada');expect(s.forgeNutrition.every(x=>x.options.length>=3)).toBe(true)
- s.forgeNutrition[0].options=[];ensureForgeMeals(s);expect(s.forgeNutrition[0].options).toEqual([])
- const empty={forgeNutrition:[]};ensureForgeMeals(empty);expect(empty.forgeNutrition).toEqual([])
- expect(TEMPLATE.filter(x=>x.options).every(x=>x.options.length>=3)).toBe(true)
+it('preserves existing meals verbatim and initializes new profiles empty',()=>{
+ const meal={title:'Refeição pessoal',text:'Minha porção personalizada',options:[]};const s={forgeNutrition:[structuredClone(meal)],forgeNutritionVersion:1};ensureForgeMeals(s);expect(s.forgeNutrition).toEqual([meal]);ensureForgeMeals(s);expect(s.forgeNutrition).toEqual([meal]);const empty={};ensureForgeMeals(empty);expect(empty.forgeNutrition).toEqual([])
 })
 it('requires a trend, ignores checkins from previous goals, and handles both directions',()=>{
  const s=base();expect(goalStatus(s).reached).toBe(false)

@@ -10,16 +10,16 @@ import {ensureForgeMeals,activateForgePlan} from '../lib/forge-profile.js'
 import {youtubeId} from '../components/YouTubeDemo.jsx'
 globalThis.IS_REACT_ACT_ENVIRONMENT=true
 it('keeps meal edits inside profile and does not overwrite routines',()=>{
- const routine={id:'keep',name:'My routine',ex:[]};useStore.setState({S:{...freshState(),routines:[routine]},user:null})
+ const routine={id:'keep',name:'My routine',ex:[]};useStore.setState({S:{...freshState(),routines:[routine],forgeNutrition:[{title:'Meu almoço',text:'Registro local',options:[]}],forgeNutritionVersion:2},user:null})
  const host=document.createElement('div'),root=createRoot(host)
  act(()=>root.render(<MemoryRouter><Nutrition/></MemoryRouter>))
- expect(host.querySelectorAll('.forge-meal')).toHaveLength(7)
- expect(useStore.getState().S.forgeNutrition).toHaveLength(7)
+ expect(host.querySelectorAll('.forge-meal')).toHaveLength(1)
+ expect(useStore.getState().S.forgeNutrition).toHaveLength(1)
  expect(useStore.getState().S.routines[0]).toEqual(routine)
  act(()=>root.unmount())
  const host2=document.createElement('div'),root2=createRoot(host2)
  act(()=>root2.render(<MemoryRouter><Nutrition/></MemoryRouter>))
- expect(host2.querySelectorAll('.forge-meal')).toHaveLength(7)
+ expect(host2.querySelectorAll('.forge-meal')).toHaveLength(1)
  act(()=>root2.unmount())
 })
 it('only embeds verified YouTube hostnames and video IDs',()=>{
@@ -30,7 +30,7 @@ it('only embeds verified YouTube hostnames and video IDs',()=>{
 })
 
 it('preserves meal edits when revisiting and never restores intentionally empty meals',()=>{
- const s=freshState();ensureForgeMeals(s);s.forgeNutrition[0].text='Minha alteração';ensureForgeMeals(s);expect(s.forgeNutrition[0].text).toBe('Minha alteração');s.forgeNutrition=[];ensureForgeMeals(s);expect(s.forgeNutrition).toEqual([])
+ const s={...freshState(),forgeNutrition:[{title:'Meu plano',text:'Minha alteração'}]};ensureForgeMeals(s);ensureForgeMeals(s);expect(s.forgeNutrition[0].text).toBe('Minha alteração');s.forgeNutrition=[];ensureForgeMeals(s);expect(s.forgeNutrition).toEqual([])
 })
 it('loads all four routines once, schedules an empty profile and preserves an existing schedule',()=>{
  const s=freshState();expect(activateForgePlan(s)).toBe(true);expect(s.routines).toHaveLength(4);expect(Object.keys(s.week).sort()).toEqual(['1','2','4','5']);expect(activateForgePlan(s)).toBe(false);expect(s.routines).toHaveLength(4);

@@ -1,17 +1,25 @@
-import { TEMPLATE, LEGACY_TEMPLATE, cloneMeals } from './forge-meals.js'
 import raw from './forge-plan.json' with {type:'json'}
 import {parsePlan,mergePlan} from './plan-share.js'
+export const NUTRITION_VERSION=3
 export function ensureForgeMeals(s){
- if(!Array.isArray(s.forgeNutrition)){s.forgeNutrition=cloneMeals();s.forgeNutritionVersion=2;return true}
- if(s.forgeNutritionVersion===2)return false
- // Upgrade known rows once, preserving custom notes, removed meals, and intentionally empty options.
- s.forgeNutrition=s.forgeNutrition.map(row=>{
-  const index=LEGACY_TEMPLATE.findIndex(x=>x.title===row.title)
-  const base=TEMPLATE.find(x=>x.id===row.id)||TEMPLATE[index]
-  if(!base||row.options!==undefined)return row
-  if(index>=0&&row.text===LEGACY_TEMPLATE[index].text)return structuredClone(base)
-  return {...row,id:row.id||base.id,...(base.options?{options:structuredClone(base.options)}:{})}
- });s.forgeNutritionVersion=2;return true
+ const changed=!Array.isArray(s.forgeNutrition)||s.forgeNutritionVersion!==NUTRITION_VERSION
+ if(!Array.isArray(s.forgeNutrition))s.forgeNutrition=[]
+ // Never infer ownership from meal contents or erase a previously saved plan.
+ s.forgeNutritionVersion=NUTRITION_VERSION
+ return changed
+}
+export function startEmptyNutrition(s){
+ if(!Array.isArray(s.forgeNutrition)||!s.forgeNutrition.length)return ensureForgeMeals(s)
+ s.forgeNutritionPrevious=structuredClone(s.forgeNutrition)
+ s.forgeNutrition=[];s.forgeNutritionVersion=NUTRITION_VERSION
+ return true
+}
+export function restorePreviousNutrition(s){
+ if(!Array.isArray(s.forgeNutritionPrevious)||!s.forgeNutritionPrevious.length)return false
+ const current=structuredClone(s.forgeNutrition||[])
+ s.forgeNutrition=structuredClone(s.forgeNutritionPrevious)
+ s.forgeNutritionPrevious=current;s.forgeNutritionVersion=NUTRITION_VERSION
+ return true
 }
 export function activateForgePlan(s){
  const existing=s.routines||[]
