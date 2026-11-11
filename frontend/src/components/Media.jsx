@@ -31,6 +31,11 @@ function BuiltinVideo({ex,minimizable}) {
     {youtube&&<YouTubeDemo ex={ex}/>}
    </details>
   </> : <YouTubeDemo ex={ex}/>}
+  {ex.id === '2146' && <p className="forge-video-credit">
+    <a href="https://www.youtube.com/watch?v=dTkT6ohMYyI" target="_blank" rel="noopener noreferrer">
+      Ver demonstração oficial da Booty Builder V8 ↗
+    </a>
+  </p>}
   {minimizable&&<button className="forge-media-minimize" onClick={()=>update(s=>{s.gifSize='mini'})}>Recolher demonstração</button>}
  </div>
 }
