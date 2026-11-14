@@ -36,6 +36,13 @@ function parsePrescription(row,fields,columns){
  const restSource=columns?.rest!=null?'descanso '+fields[columns.rest]:all
  const rest=restSource.match(/(?:descanso|intervalo|pausa)\s*[:=]?\s*(\d+(?:[.,]\d+)?)\s*(s|seg(?:undos)?|min(?:utos)?)\b/i)
  if(rest)row.rest=String(num(rest[1])*(rest[2].toLowerCase().startsWith('min')?60:1))
+ else if(scheme&&!columns){
+  const afterReps=all.slice(scheme.index+scheme[0].length)
+  const inlineRest=afterReps.match(/^(?:\s*\/\s*(?:perna|lado|braço))?[\s|]+(\d+)\s*(s|seg(?:undos)?|min(?:utos)?)\b/i)
+  if(inlineRest)row.rest=String(Number(inlineRest[1])*(inlineRest[2].toLowerCase().startsWith('min')?60:1))
+ }
+ row.side=!!scheme&&/^\s*\/\s*(?:perna|lado|braço)\b/i.test(all.slice(scheme.index+scheme[0].length))
+
  // Time prescriptions are never silently turned into repetitions.
  const timed=all.match(/(\d{1,2})\s*[x×]\s*(\d+)\s*(s|seg(?:undos)?|min(?:utos)?)\b/i)
  if(timed){row.sets=timed[1];row.mode='time';row.duration=String(Number(timed[2])*(timed[3].toLowerCase().startsWith('min')?60:1));row.reps=''}
@@ -48,16 +55,18 @@ export function parseTrainingText(text){
  const routine=name=>{current=routines.find(r=>r.name===name);if(!current){current={key:uid(),name,ex:[]};routines.push(current)}}
  for(const raw of String(text).split(/\r?\n/)){
   const line=raw.trim();if(!line)continue
+  const dayHeading=line.match(/^(?:segunda|terça|quarta|quinta|sexta|sábado|domingo)(?:-feira)?[\s|·–—:-]+((?:superiores|inferiores|corpo inteiro)\s+[A-G])\b/i)
+  if(dayHeading){routine(dayHeading[1]);columns=null;continue}
   if(/^(?:treino|ficha|dia)\s*(?:[A-G]|\d{1,2})(?:\b|\s*[-:])/i.test(line)&&line.length<100&&!/\d\s*[x×]\s*\d/i.test(line)){routine(line);columns=null;continue}
-  const fields=line.split(/\s*\|\s*|\t+/).map(s=>s.trim())
+  const fields=line.split(/\s*\|\s*|\t+| {2,}/).map(s=>s.trim())
   const normalized=fields.map(normalizeExercise)
   if(normalized.some(x=>/^(exercicio|exercicios|exercise)$/.test(x))&&normalized.some(x=>/series|sets|repeticoes|reps/.test(x))){columns={};for(let i=0;i<normalized.length;i++){const h=normalized[i];if(/exercicio|exercise/.test(h))columns.name=i;else if(/series|sets/.test(h))columns.sets=i;else if(/repet|reps/.test(h))columns.reps=i;else if(/carga|peso|weight/.test(h)){columns.weight=i;if(/\bkg\b/.test(h))columns.weightUnit='kg';else if(/\blbs?\b/.test(h))columns.weightUnit='lb'}else if(/descanso|intervalo|rest/.test(h)){columns.rest=i;if(/\bmin(?:utos)?\b/.test(h))columns.restUnit=60;else if(/\bs\b|\bseg(?:undos)?\b/.test(h))columns.restUnit=1}}continue}
   if(/^pagina\s+\d|^page\s+\d|^\d+\s*\/\s*\d+$|^--- pagina/i.test(normalizeExercise(line)))continue
   const scheme=line.match(/(?:^|\s)\d{1,2}\s*[x×]\s*\d/i)
   let name=columns&&fields.length>1?fields[columns.name??0]:fields[0].split(/\s+\d{1,2}\s*[x×]\s*\d/i)[0]
-  name=name.replace(/^\d+[.)-]\s*/,'').trim()
+  name=(name||'').replace(/^\d+[.)-]\s*/,'').trim()
   const exact=exerciseSuggestions(name)
-  const looksLikeRow=scheme||columns&&fields.length>1&&/\d/.test(fields.slice(1).join(' '))||exact.exact
+  const looksLikeRow=scheme||columns&&fields.length>1&&[columns.sets,columns.reps].some(i=>/^\d+(?:\s*[-–a/]\s*\d+)*$/.test(fields[i]||''))||exact.exact
   if(!name||!looksLikeRow){ignored.push(line);continue}
   if(!current)routine('Ficha importada')
   if(routines.length>14||routines.reduce((n,r)=>n+r.ex.length,0)>=200)throw Error('Limite de 14 treinos e 200 exercícios por importação.')
@@ -88,6 +97,7 @@ export function applyPdfPlan(s,draft){
   let id=e.exerciseId
   if(e.custom){id=uid();custom.push({id,n:e.name.trim(),bp:'full body',eq:'other',tg:'other',custom:true,sm:[]})}
   const out={id,sets:Number(e.sets),mode:e.mode,prog:'off',note:('Importado de PDF. Nome original: '+e.name+'\n'+e.note+(e.rest===''?'\nDescanso não informado: o aplicativo poderá mostrar o padrão do perfil; confira no editor.':'')).slice(0,4000)}
+  if(e.mode==='reps'&&e.side)out.side=true
   if(e.mode==='reps'){if(e.reps.includes('/'))out.pyramid=e.reps.split('/').map(Number);else{const [min,max]=e.reps.split(/[-–]/).map(Number);out.reps=min;out.repsMin=min;out.repsMax=max||min}}
   else if(e.mode==='time')out.sec=Number(e.duration);else out.min=Number(e.duration)/60
   if(e.rest!=='')out.restSec=Number(e.rest)

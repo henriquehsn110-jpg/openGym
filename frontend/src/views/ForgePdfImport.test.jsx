@@ -30,3 +30,15 @@ it('keeps unknown names unresolved until a person maps them or explicitly choose
 it('blocks imports during a session',()=>{
  store.S.active={};act(()=>root.render(<MemoryRouter><ForgePdfImport/></MemoryRouter>));prepare('Supino reto com halteres 3x10');click('Conferi este exercício');expect(button('Importar ficha revisada').disabled).toBe(true)
 })
+
+it('reviews a complete table in bulk and explicitly keeps unmatched exercises as custom',()=>{
+ prepare('SEXTA · INFERIORES B | 5 séries\nExercício | Séries × reps | Descanso | Carga\nAgachamento goblet | 3 × 8–12 | 120 s | ____\nMovimento especial | 2 × 12–15 / perna | 75 s | ____')
+ act(()=>button('Marcar todos como conferidos').click())
+ expect(button('Importar ficha revisada').disabled).toBe(true)
+ click('Manter exercícios sem correspondência como personalizados')
+ act(()=>button('Marcar todos como conferidos').click())
+ act(()=>button('Importar ficha revisada').click())
+ expect(store.S.routines.at(-1).name).toBe('INFERIORES B')
+ expect(store.S.routines.at(-1).ex[1]).toMatchObject({side:true,restSec:75,sets:2,repsMin:12,repsMax:15})
+ expect(store.S.customEx).toHaveLength(1)
+})
