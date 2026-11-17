@@ -9,9 +9,9 @@ function importRowIssue(row){
  catch(error){return error.message}
 }
 
-function reviewBatch(draft,keepUnmatched){
+function reviewBatch(draft){
  return {...draft,routines:draft.routines.map(routine=>({...routine,ex:routine.ex.map(row=>{
-  const candidate={...row,custom:row.custom||(keepUnmatched&&!row.exerciseId)}
+  const candidate={...row,custom:row.custom||!row.exerciseId}
   return importRowIssue(candidate)?{...row,reviewed:false}:{...candidate,reviewed:true}
  })}))}
 }
@@ -31,7 +31,7 @@ export default function ForgePdfImport(){
  const unmatched=rows.filter(row=>!row.custom&&!row.exerciseId)
  const reviewAll=()=>{
   setError('')
-  setDraft(current=>reviewBatch(current,false))
+  changeDraft(reviewBatch)
  }
  const save=reviewedDraft=>{
   try{
@@ -59,7 +59,7 @@ export default function ForgePdfImport(){
  {error&&(!draft||busy)&&<p className="forge-notice" role="alert">{error}</p>}
  {draft&&<section aria-label="Revisão da ficha importada"><h2>2. Revisar os treinos</h2><p>Correspondências sugeridas não alteram o PDF. Confirme variação, equipamento, séries, repetições, descanso e se a carga é total ou por halter. Dados ausentes ficam em branco. Métodos especiais permanecem nas observações e precisam ser conferidos no editor.</p>
  {!saved&&draft.routines.length>0&&<div className="forge-card">
-  <p>Depois de conferir os valores, marque os exercícios em lote. Você pode manter os que estiverem sem correspondência ao importar a ficha.</p>
+  <p>Depois de conferir a ficha, marque todos de uma vez. Exercícios sem correspondência ficam como personalizados, sem vídeo automático. Exercícios com valores inválidos continuam pendentes.</p>
   <button className="forge-btn forge-secondary" onClick={reviewAll}>Marcar todos como conferidos</button>
   <p aria-live="polite">{pending} {pending===1?'exercício pendente':'exercícios pendentes'}</p>
  </div>}
@@ -78,7 +78,7 @@ export default function ForgePdfImport(){
   {confirmBatch?<div>
    <p>Confirme que você conferiu os exercícios e os valores com a ficha original.</p>
    {unmatched.length>0&&<p>{unmatched.length} {unmatched.length===1?'exercício será salvo':'exercícios serão salvos'} com o nome do PDF e sem vídeo automático.</p>}
-   <button className="forge-btn forge-primary" disabled={active||busy} onClick={()=>save(reviewBatch(draft,true))}>Conferi a ficha, importar</button>
+   <button className="forge-btn forge-primary" disabled={active||busy} onClick={()=>save(reviewBatch(draft))}>Conferi a ficha, importar</button>
    <button className="forge-btn forge-secondary" onClick={()=>{setConfirmBatch(false);setError('')}}>Voltar à revisão</button>
   </div>:<button className="forge-btn forge-primary" disabled={busy||active||!draft.routines.length||draft.routines.some(r=>!r.ex.length)} onClick={startImport}>Importar ficha revisada</button>}
  </section>}
