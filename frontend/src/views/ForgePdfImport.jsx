@@ -3,25 +3,55 @@ import {Link} from 'react-router-dom'
 import {useStore} from '../store/useStore.js'
 import {parseTrainingText,exerciseSuggestions,newImportRow,applyPdfPlan,catalogExerciseName,validateImportedRow} from '../lib/forge-pdf-plan.js'
 import './forge.css'
+
+function importRowIssue(row){
+ try{validateImportedRow({...row,reviewed:true});return ''}
+ catch(error){return error.message}
+}
+
+function reviewBatch(draft,keepUnmatched){
+ return {...draft,routines:draft.routines.map(routine=>({...routine,ex:routine.ex.map(row=>{
+  const candidate={...row,custom:row.custom||(keepUnmatched&&!row.exerciseId)}
+  return importRowIssue(candidate)?{...row,reviewed:false}:{...candidate,reviewed:true}
+ })}))}
+}
 export default function ForgePdfImport(){
  const update=useStore(s=>s.update),active=useStore(s=>!!s.S.active)
  const [file,setFile]=useState(null),[ocr,setOcr]=useState(false),[busy,setBusy]=useState(false),[status,setStatus]=useState(''),[error,setError]=useState(''),[text,setText]=useState(''),[draft,setDraft]=useState(null),[saved,setSaved]=useState(false)
+ const [confirmBatch,setConfirmBatch]=useState(false)
  const abort=useRef(null);useEffect(()=>()=>abort.current?.abort(),[])
- const parse=source=>{try{const p=parseTrainingText(source);setDraft(p);setSaved(false);setError(p.routines.length?'':'Nenhum exercício reconhecido. Confira o texto ou adicione um treino e os exercícios manualmente.')}catch(e){setError(e.message)}}
- const read=async()=>{if(!file){setError('Selecione um PDF.');return}setBusy(true);setError('');setDraft(null);setText('');setSaved(false);abort.current=new AbortController();try{const {readTrainingPdf}=await import('../lib/forge-pdf-read.js');const value=await readTrainingPdf(file,{ocr,signal:abort.current.signal,onProgress:setStatus});setText(value);parse(value)}catch(e){setError(e.message)}finally{setBusy(false);setStatus('')}}
- const edit=(ri,ei,key,value)=>{setSaved(false);setDraft(d=>({...d,routines:d.routines.map((r,i)=>i!==ri?r:{...r,ex:r.ex.map((e,j)=>j!==ei?e:{...e,[key]:value,...(key==='reviewed'?{}:{reviewed:false})})})}))}
- const changeRoutine=(ri,name)=>setDraft(d=>({...d,routines:d.routines.map((r,i)=>i===ri?{...r,name}:r)}))
- const addRoutine=()=>{setSaved(false);setDraft(d=>({ignored:d?.ignored||[],routines:[...(d?.routines||[]),{key:Date.now()+'',name:'Novo treino',ex:[newImportRow()]}]}))}
- const [useCustomForUnmatched,setUseCustomForUnmatched]=useState(false)
+ const parse=source=>{setConfirmBatch(false);try{const p=parseTrainingText(source);setDraft(p);setSaved(false);setError(p.routines.length?'':'Nenhum exercício reconhecido. Confira o texto ou adicione um treino e os exercícios manualmente.')}catch(e){setError(e.message)}}
+ const read=async()=>{setConfirmBatch(false);if(!file){setError('Selecione um PDF.');return}setBusy(true);setError('');setDraft(null);setText('');setSaved(false);abort.current=new AbortController();try{const {readTrainingPdf}=await import('../lib/forge-pdf-read.js');const value=await readTrainingPdf(file,{ocr,signal:abort.current.signal,onProgress:setStatus});setText(value);parse(value)}catch(e){setError(e.message)}finally{setBusy(false);setStatus('')}}
+ const edit=(ri,ei,key,value)=>{setConfirmBatch(false);setSaved(false);setDraft(d=>({...d,routines:d.routines.map((r,i)=>i!==ri?r:{...r,ex:r.ex.map((e,j)=>j!==ei?e:{...e,[key]:value,...(key==='reviewed'?{}:{reviewed:false})})})}))}
+ const changeDraft=editDraft=>{setConfirmBatch(false);setDraft(editDraft)}
+ const changeRoutine=(ri,name)=>changeDraft(d=>({...d,routines:d.routines.map((r,i)=>i===ri?{...r,name}:r)}))
+ const addRoutine=()=>{setSaved(false);changeDraft(d=>({ignored:d?.ignored||[],routines:[...(d?.routines||[]),{key:Date.now()+'',name:'Novo treino',ex:[newImportRow()]}]}))}
+ const rows=draft?.routines.flatMap(routine=>routine.ex)??[]
+ const pending=rows.filter(row=>!row.reviewed).length
+ const unmatched=rows.filter(row=>!row.custom&&!row.exerciseId)
  const reviewAll=()=>{
   setError('')
-  setDraft(current=>({...current,routines:current.routines.map(routine=>({...routine,ex:routine.ex.map(row=>{
-   const candidate={...row,reviewed:true,custom:row.custom||(useCustomForUnmatched&&!row.exerciseId)}
-   try{validateImportedRow(candidate);return candidate}catch{return {...row,reviewed:false}}
-  })}))}))
+  setDraft(current=>reviewBatch(current,false))
  }
- const pending=draft?.routines.reduce((count,routine)=>count+routine.ex.filter(row=>!row.reviewed).length,0)??0
- const save=()=>{try{update(s=>applyPdfPlan(s,draft));setSaved(true);setError('')}catch(e){setError(e.message)}}
+ const save=reviewedDraft=>{
+  try{
+   update(s=>{applyPdfPlan(s,reviewedDraft)})
+   setDraft(reviewedDraft)
+   setSaved(true)
+   setConfirmBatch(false)
+   setError('')
+  }catch(e){setError(e.message)}
+ }
+ const startImport=()=>{
+  setError('')
+  if(!pending&&!unmatched.length){save(draft);return}
+  const invalid=rows.find(row=>importRowIssue({...row,custom:row.custom||!row.exerciseId}))
+  if(invalid){
+   setError(importRowIssue({...invalid,custom:invalid.custom||!invalid.exerciseId}))
+   return
+  }
+  setConfirmBatch(true)
+ }
  return <main className="forge-page"><div className="forge-eyebrow">APROVEITE SUA FICHA PRONTA</div><header className="forge-title"><div><h1>Do PDF<br/><span>para seu treino.</span></h1><p>Confira cada exercício e os números antes de importar. A prescrição original fica nas observações.</p></div></header><div className="forge-tabs"><Link to="/training/start">Escolher outra opção</Link><Link to="/training/new">Gerar pelo questionário</Link></div>
  <section className="forge-card forge-editor"><h2>1. Ler minha ficha</h2><p>O arquivo é processado no aparelho e não é enviado a um servidor. Até 10 MB e 20 páginas de texto; com reconhecimento de imagens, até 8 páginas.</p><label>Arquivo PDF<input type="file" accept="application/pdf,.pdf" disabled={busy} onChange={e=>{setFile(e.target.files?.[0]||null);setText('');setDraft(null);setSaved(false);setError('')}}/></label><label className="forge-check"><input type="checkbox" checked={ocr} disabled={busy} onChange={e=>setOcr(e.target.checked)}/>PDF digitalizado: usar reconhecimento de texto (OCR)</label><p>OCR pode demorar no celular e confundir letras e números. A primeira utilização carrega os recursos de leitura do próprio FORGE.</p><button className="forge-btn forge-primary" disabled={busy||!file} onClick={read}>Ler PDF e preparar revisão</button>{busy&&<button className="forge-btn forge-secondary" onClick={()=>abort.current?.abort()}>Cancelar leitura</button>}<p role="status" aria-live="polite">{status}</p>
  <details><summary style={{padding:'14px 0',cursor:'pointer'}}>Conferir ou colar o texto da ficha</summary><label>Texto extraído do PDF<textarea maxLength={150000} value={text} onChange={e=>{setText(e.target.value);setDraft(null);setSaved(false)}} placeholder={'Treino A\nSupino reto com halteres 3x8-12 descanso 90s\nAgachamento goblet 3x10'}/></label><p>Tabelas podem usar | entre colunas. Ex.: Exercício | Séries | Repetições | Descanso (s). Preserve observações como bi-set, drop-set e carga por halter para revisar.</p><button className="forge-btn forge-secondary" disabled={busy||!text.trim()} onClick={()=>parse(text)}>Preparar revisão do texto</button></details>
@@ -29,25 +59,35 @@ export default function ForgePdfImport(){
  {error&&(!draft||busy)&&<p className="forge-notice" role="alert">{error}</p>}
  {draft&&<section aria-label="Revisão da ficha importada"><h2>2. Revisar os treinos</h2><p>Correspondências sugeridas não alteram o PDF. Confirme variação, equipamento, séries, repetições, descanso e se a carga é total ou por halter. Dados ausentes ficam em branco. Métodos especiais permanecem nas observações e precisam ser conferidos no editor.</p>
  {!saved&&draft.routines.length>0&&<div className="forge-card">
-  <label className="forge-check"><input type="checkbox" checked={useCustomForUnmatched} onChange={e=>setUseCustomForUnmatched(e.target.checked)}/>Manter exercícios sem correspondência como personalizados</label>
-  <p>Depois de conferir a ficha, marque em lote. Exercícios com dados pendentes ficam destacados para correção.</p>
+  <p>Depois de conferir os valores, marque os exercícios em lote. Você pode manter os que estiverem sem correspondência ao importar a ficha.</p>
   <button className="forge-btn forge-secondary" onClick={reviewAll}>Marcar todos como conferidos</button>
   <p aria-live="polite">{pending} {pending===1?'exercício pendente':'exercícios pendentes'}</p>
  </div>}
  {draft.routines.map((r,ri)=><section className="forge-card forge-editor" key={r.key} style={{marginBottom:16}}><label>Nome do treino {ri+1}<input value={r.name} maxLength={80} disabled={saved} onChange={e=>changeRoutine(ri,e.target.value)}/></label>
- {r.ex.map((row,ei)=><ImportRow key={row.key} row={row} disabled={saved} onChange={(k,v)=>edit(ri,ei,k,v)} onRemove={()=>setDraft(d=>({...d,routines:d.routines.map((x,i)=>i===ri?{...x,ex:x.ex.filter((_,j)=>j!==ei)}:x)}))}/>)}
- {!saved&&<><button className="forge-text-btn" onClick={()=>setDraft(d=>({...d,routines:d.routines.map((x,i)=>i===ri?{...x,ex:[...x.ex,newImportRow()]}:x)}))}>+ Adicionar exercício a este treino</button><br/><button className="forge-text-btn" onClick={()=>setDraft(d=>({...d,routines:d.routines.filter((_,i)=>i!==ri)}))}>Remover este treino da importação</button></>}</section>)}
+ {r.ex.map((row,ei)=><ImportRow key={row.key} row={row} disabled={saved} onChange={(k,v)=>edit(ri,ei,k,v)} onRemove={()=>changeDraft(d=>({...d,routines:d.routines.map((x,i)=>i===ri?{...x,ex:x.ex.filter((_,j)=>j!==ei)}:x)}))}/>)}
+ {!saved&&<><button className="forge-text-btn" onClick={()=>changeDraft(d=>({...d,routines:d.routines.map((x,i)=>i===ri?{...x,ex:[...x.ex,newImportRow()]}:x)}))}>+ Adicionar exercício a este treino</button><br/><button className="forge-text-btn" onClick={()=>changeDraft(d=>({...d,routines:d.routines.filter((_,i)=>i!==ri)}))}>Remover este treino da importação</button></>}</section>)}
  {draft.ignored.length>0&&<details className="forge-card"><summary>Texto não convertido em exercícios ({draft.ignored.length} linhas): conferir</summary><p>Confira se alguma prescrição ficou aqui. Adicione manualmente o que precisar; a importação não interpreta toda diagramação.</p><pre style={{whiteSpace:'pre-wrap',font:'13px/1.6 system-ui'}}>{draft.ignored.join('\n')}</pre></details>}
  </section>}
  {!saved&&<p><button className="forge-btn forge-secondary" disabled={busy} onClick={addRoutine}>+ Adicionar treino manualmente</button></p>}
- {draft&&!saved&&<section className="forge-card"><h2>3. Adicionar ao meu plano</h2><p>A importação acrescenta novas fichas. Sua agenda, cargas anteriores, alimentação e histórico não serão substituídos. Depois de importar, escolha os dias em Plano.</p>{error&&<p className="forge-notice" role="alert">{error}</p>}{pending>0&&<p>{pending} exercícios ainda precisam de conferência.</p>}<button className="forge-btn forge-primary" disabled={busy||active||!draft.routines.length||draft.routines.some(r=>!r.ex.length||r.ex.some(e=>!e.reviewed))} onClick={save}>Importar ficha revisada</button>{active&&<p>Finalize a sessão em andamento para importar.</p>}</section>}
+ {draft&&!saved&&<section className="forge-card">
+  <h2>3. Adicionar ao meu plano</h2>
+  <p>A importação acrescenta novas fichas. Depois de importar, escolha os dias em Plano.</p>
+  {error&&<p className="forge-notice" role="alert">{error}</p>}
+  {active&&<p>Finalize a sessão em andamento para importar.</p>}
+  {draft.routines.some(r=>!r.ex.length)&&<p>Adicione um exercício a cada treino ou remova os treinos vazios.</p>}
+  {confirmBatch?<div>
+   <p>Confirme que você conferiu os exercícios e os valores com a ficha original.</p>
+   {unmatched.length>0&&<p>{unmatched.length} {unmatched.length===1?'exercício será salvo':'exercícios serão salvos'} com o nome do PDF e sem vídeo automático.</p>}
+   <button className="forge-btn forge-primary" disabled={active||busy} onClick={()=>save(reviewBatch(draft,true))}>Conferi a ficha, importar</button>
+   <button className="forge-btn forge-secondary" onClick={()=>{setConfirmBatch(false);setError('')}}>Voltar à revisão</button>
+  </div>:<button className="forge-btn forge-primary" disabled={busy||active||!draft.routines.length||draft.routines.some(r=>!r.ex.length)} onClick={startImport}>Importar ficha revisada</button>}
+ </section>}
  {saved&&<section className="forge-card" role="status"><h2>Ficha importada.</h2><p>Abra o Plano para consultar, ajustar a agenda e conferir métodos especiais antes de iniciar.</p><Link className="forge-btn forge-primary" to="/plan">Abrir meu plano →</Link></section>}
  </main>
 }
 function ImportRow({row,disabled,onChange,onRemove}){
  const [query,setQuery]=useState(row.name),matches=exerciseSuggestions(query)
- let issue=''
- try{validateImportedRow({...row,reviewed:true})}catch(error){issue=error.message}
+ const issue=importRowIssue(row)
  const candidates=matches.items.some(x=>x.id===row.exerciseId)?matches.items:[...(row.exerciseId?[{id:row.exerciseId,name:catalogExerciseName(row.exerciseId)}]:[]),...matches.items]
  return <fieldset style={{border:'1px solid #cbd6c1',borderRadius:12,padding:16,margin:'18px 0'}}><legend>{row.name||'Exercício a conferir'}</legend>
  {!disabled&&issue&&<p className="forge-notice">{issue}</p>}
@@ -62,6 +102,6 @@ function ImportRow({row,disabled,onChange,onRemove}){
  <label>Descanso em segundos (opcional)<input type="number" min={0} value={row.rest} disabled={disabled} onChange={e=>onChange('rest',e.target.value)}/></label>
  <label>Carga (opcional; confirme total ou por halter)<input type="number" min={0} step="any" value={row.weight} disabled={disabled} onChange={e=>onChange('weight',e.target.value)}/></label><label>Unidade da carga do PDF<select value={row.unit} disabled={disabled} onChange={e=>onChange('unit',e.target.value)}><option value="kg">kg</option><option value="lb">lb</option></select></label>
  <label>Observações e métodos originais<textarea value={row.note} disabled={disabled} onChange={e=>onChange('note',e.target.value)}/></label>
- <label className="forge-check"><input type="checkbox" checked={row.reviewed} disabled={disabled} onChange={e=>onChange('reviewed',e.target.checked)}/>Conferi este exercício e todos os valores com a ficha original</label>{!disabled&&<button className="forge-text-btn" onClick={onRemove}>Não importar este exercício</button>}
+ <label className="forge-check"><input type="checkbox" checked={row.reviewed} disabled={disabled||!!issue} onChange={e=>onChange('reviewed',e.target.checked)}/>Conferi este exercício e todos os valores com a ficha original</label>{!disabled&&<button className="forge-text-btn" onClick={onRemove}>Não importar este exercício</button>}
  </fieldset>
 }

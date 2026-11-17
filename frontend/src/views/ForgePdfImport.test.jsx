@@ -18,13 +18,14 @@ const input=(el,value)=>act(()=>{Object.getOwnPropertyDescriptor(el instanceof H
 const prepare=text=>{input(label('Texto extraído do PDF').querySelector('textarea'),text);act(()=>button('Preparar revisão do texto').click())}
 it('offers both entry paths',()=>{act(()=>root.render(<MemoryRouter><ForgeStart/></MemoryRouter>));expect(host.querySelector('a[href="/training/import"]')).not.toBeNull();expect(host.querySelector('a[href="/training/new"]')).not.toBeNull()})
 it('requires exercise review, invalidates it on edits, saves once without replacing existing records',()=>{
- const before=structuredClone(store.S);prepare('Treino A\nSupino reto com halteres 3x8-12 descanso 90s');expect(store.S).toEqual(before);expect(button('Importar ficha revisada').disabled).toBe(true)
+ const before=structuredClone(store.S);prepare('Treino A\nSupino reto com halteres 3x8-12 descanso 90s');expect(store.S).toEqual(before);expect(button('Importar ficha revisada').disabled).toBe(false)
  click('Conferi este exercício');expect(button('Importar ficha revisada').disabled).toBe(false)
- input(label('Séries').querySelector('input'),'4');expect(button('Importar ficha revisada').disabled).toBe(true);click('Conferi este exercício');act(()=>button('Importar ficha revisada').click())
+ input(label('Séries').querySelector('input'),'4');expect(label('Conferi este exercício').querySelector('input').checked).toBe(false);click('Conferi este exercício');act(()=>button('Importar ficha revisada').click())
  expect(store.S.routines).toHaveLength(2);expect(store.S.routines[1].ex[0].sets).toBe(4);for(const k of ['week','workouts','forgeMeals'])expect(store.S[k]).toEqual(before[k]);expect(host.textContent).toContain('Ficha importada.');expect(button('Importar ficha revisada')).toBeUndefined()
 })
 it('keeps unknown names unresolved until a person maps them or explicitly chooses custom',()=>{
- prepare('Movimento da família 3x10');click('Conferi este exercício');act(()=>button('Importar ficha revisada').click());expect(host.querySelector('[role=alert]').textContent).toContain('correspondência');expect(store.S.routines).toHaveLength(1)
+ prepare('Movimento da família 3x10');expect(label('Conferi este exercício').querySelector('input').disabled).toBe(true);act(()=>button('Importar ficha revisada').click());expect(host.textContent).toContain('1 exercício será salvo');expect(store.S.routines).toHaveLength(1)
+ act(()=>button('Voltar à revisão').click())
  click('Manter como exercício personalizado');click('Conferi este exercício');act(()=>button('Importar ficha revisada').click());expect(store.S.customEx).toHaveLength(1);expect(store.S.customEx[0].n).toBe('Movimento da família')
 })
 it('blocks imports during a session',()=>{
@@ -34,11 +35,19 @@ it('blocks imports during a session',()=>{
 it('reviews a complete table in bulk and explicitly keeps unmatched exercises as custom',()=>{
  prepare('SEXTA · INFERIORES B | 5 séries\nExercício | Séries × reps | Descanso | Carga\nAgachamento goblet | 3 × 8–12 | 120 s | ____\nMovimento especial | 2 × 12–15 / perna | 75 s | ____')
  act(()=>button('Marcar todos como conferidos').click())
- expect(button('Importar ficha revisada').disabled).toBe(true)
- click('Manter exercícios sem correspondência como personalizados')
- act(()=>button('Marcar todos como conferidos').click())
+ expect(host.textContent).toContain('1 exercício pendente')
  act(()=>button('Importar ficha revisada').click())
+ expect(store.update).not.toHaveBeenCalled()
+ act(()=>button('Conferi a ficha, importar').click())
  expect(store.S.routines.at(-1).name).toBe('INFERIORES B')
  expect(store.S.routines.at(-1).ex[1]).toMatchObject({side:true,restSec:75,sets:2,repsMin:12,repsMax:15})
  expect(store.S.customEx).toHaveLength(1)
+})
+
+it('shows the invalid prescription at the import button without saving the draft',()=>{
+ prepare('Movimento especial 3x12–8')
+ act(()=>button('Importar ficha revisada').click())
+ expect(host.querySelector('[role=alert]').textContent).toContain('Movimento especial')
+ expect(button('Conferi a ficha, importar')).toBeUndefined()
+ expect(store.update).not.toHaveBeenCalled()
 })
