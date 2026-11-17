@@ -28,8 +28,15 @@ it('keeps unknown names unresolved until a person maps them or explicitly choose
  act(()=>button('Voltar à revisão').click())
  click('Manter como exercício personalizado');click('Conferi este exercício');act(()=>button('Importar ficha revisada').click());expect(store.S.customEx).toHaveLength(1);expect(store.S.customEx[0].n).toBe('Movimento da família')
 })
-it('blocks imports during a session',()=>{
- store.S.active={};act(()=>root.render(<MemoryRouter><ForgePdfImport/></MemoryRouter>));prepare('Supino reto com halteres 3x10');click('Conferi este exercício');expect(button('Importar ficha revisada').disabled).toBe(true)
+it('imports during an active workout through the confirmation step',()=>{
+ const active={id:'live',start:1000,entries:[{id:'0289',sets:[{w:25,r:10,done:true}]}]}
+ store.S.active=structuredClone(active)
+ prepare('Movimento da família 3x10')
+ act(()=>button('Importar ficha revisada').click())
+ act(()=>button('Conferi a ficha, importar').click())
+ expect(host.textContent).toContain('Ficha importada.')
+ expect(store.S.routines).toHaveLength(2)
+ expect(store.S.active).toEqual(active)
 })
 
 it('reviews a complete table in bulk and explicitly keeps unmatched exercises as custom',()=>{

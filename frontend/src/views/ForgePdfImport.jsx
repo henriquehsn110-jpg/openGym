@@ -16,7 +16,7 @@ function reviewBatch(draft){
  })}))}
 }
 export default function ForgePdfImport(){
- const update=useStore(s=>s.update),active=useStore(s=>!!s.S.active)
+ const update=useStore(s=>s.update)
  const [file,setFile]=useState(null),[ocr,setOcr]=useState(false),[busy,setBusy]=useState(false),[status,setStatus]=useState(''),[error,setError]=useState(''),[text,setText]=useState(''),[draft,setDraft]=useState(null),[saved,setSaved]=useState(false)
  const [confirmBatch,setConfirmBatch]=useState(false)
  const abort=useRef(null);useEffect(()=>()=>abort.current?.abort(),[])
@@ -71,16 +71,15 @@ export default function ForgePdfImport(){
  {!saved&&<p><button className="forge-btn forge-secondary" disabled={busy} onClick={addRoutine}>+ Adicionar treino manualmente</button></p>}
  {draft&&!saved&&<section className="forge-card">
   <h2>3. Adicionar ao meu plano</h2>
-  <p>A importação acrescenta novas fichas. Depois de importar, escolha os dias em Plano.</p>
+  <p>A importação acrescenta novas fichas. Você pode importar durante um treino e escolher os dias depois, em Plano.</p>
   {error&&<p className="forge-notice" role="alert">{error}</p>}
-  {active&&<p>Finalize a sessão em andamento para importar.</p>}
   {draft.routines.some(r=>!r.ex.length)&&<p>Adicione um exercício a cada treino ou remova os treinos vazios.</p>}
   {confirmBatch?<div>
    <p>Confirme que você conferiu os exercícios e os valores com a ficha original.</p>
    {unmatched.length>0&&<p>{unmatched.length} {unmatched.length===1?'exercício será salvo':'exercícios serão salvos'} com o nome do PDF e sem vídeo automático.</p>}
-   <button className="forge-btn forge-primary" disabled={active||busy} onClick={()=>save(reviewBatch(draft))}>Conferi a ficha, importar</button>
+   <button className="forge-btn forge-primary" disabled={busy} onClick={()=>save(reviewBatch(draft))}>Conferi a ficha, importar</button>
    <button className="forge-btn forge-secondary" onClick={()=>{setConfirmBatch(false);setError('')}}>Voltar à revisão</button>
-  </div>:<button className="forge-btn forge-primary" disabled={busy||active||!draft.routines.length||draft.routines.some(r=>!r.ex.length)} onClick={startImport}>Importar ficha revisada</button>}
+  </div>:<button className="forge-btn forge-primary" disabled={busy||!draft.routines.length||draft.routines.some(r=>!r.ex.length)} onClick={startImport}>Importar ficha revisada</button>}
  </section>}
  {saved&&<section className="forge-card" role="status"><h2>Ficha importada.</h2><p>Abra o Plano para consultar, ajustar a agenda e conferir métodos especiais antes de iniciar.</p><Link className="forge-btn forge-primary" to="/plan">Abrir meu plano →</Link></section>}
  </main>

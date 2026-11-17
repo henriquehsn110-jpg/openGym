@@ -90,7 +90,6 @@ export function validateImportedRow(e){
  if(!['kg','lb'].includes(e.unit))throw Error('Unidade da carga inválida.')
 }
 export function applyPdfPlan(s,draft){
- if(s.active)throw Error('Finalize a sessão em andamento antes de importar.')
  if(!draft.routines?.length||draft.routines.length>14||draft.routines.some(r=>!r.name.trim()||!r.ex.length)||draft.routines.reduce((n,r)=>n+r.ex.length,0)>200)throw Error('Revise a divisão e os exercícios da ficha.')
  for(const r of draft.routines)for(const e of r.ex)validateImportedRow(e)
  const custom=[],routines=draft.routines.map(r=>({id:uid(),name:r.name.trim().slice(0,80),ex:r.ex.map(e=>{
