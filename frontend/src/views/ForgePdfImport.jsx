@@ -18,6 +18,7 @@ function reviewBatch(draft){
 export default function ForgePdfImport(){
  const update=useStore(s=>s.update)
  const [file,setFile]=useState(null),[ocr,setOcr]=useState(false),[busy,setBusy]=useState(false),[status,setStatus]=useState(''),[error,setError]=useState(''),[text,setText]=useState(''),[draft,setDraft]=useState(null),[saved,setSaved]=useState(false)
+ const [savedIds,setSavedIds]=useState([])
  const [confirmBatch,setConfirmBatch]=useState(false)
  const abort=useRef(null);useEffect(()=>()=>abort.current?.abort(),[])
  const parse=source=>{setConfirmBatch(false);try{const p=parseTrainingText(source);setDraft(p);setSaved(false);setError(p.routines.length?'':'Nenhum exercício reconhecido. Confira o texto ou adicione um treino e os exercícios manualmente.')}catch(e){setError(e.message)}}
@@ -35,7 +36,9 @@ export default function ForgePdfImport(){
  }
  const save=reviewedDraft=>{
   try{
-   update(s=>{applyPdfPlan(s,reviewedDraft)})
+   let ids
+   update(s=>{ids=applyPdfPlan(s,reviewedDraft)})
+   setSavedIds(ids)
    setDraft(reviewedDraft)
    setSaved(true)
    setConfirmBatch(false)
@@ -81,7 +84,7 @@ export default function ForgePdfImport(){
    <button className="forge-btn forge-secondary" onClick={()=>{setConfirmBatch(false);setError('')}}>Voltar à revisão</button>
   </div>:<button className="forge-btn forge-primary" disabled={busy||!draft.routines.length||draft.routines.some(r=>!r.ex.length)} onClick={startImport}>Importar ficha revisada</button>}
  </section>}
- {saved&&<section className="forge-card" role="status"><h2>Ficha importada.</h2><p>Abra o Plano para consultar, ajustar a agenda e conferir métodos especiais antes de iniciar.</p><Link className="forge-btn forge-primary" to="/plan">Abrir meu plano →</Link></section>}
+ {saved&&<section className="forge-card" role="status"><h2>Ficha importada.</h2><p>Abra a ficha importada e escolha os dias para incluí-la na sua agenda.</p><Link className="forge-btn forge-primary" to={'/my-training?routine='+encodeURIComponent(savedIds[0]||'')}>Abrir ficha importada →</Link></section>}
  </main>
 }
 function ImportRow({row,disabled,onChange,onRemove}){

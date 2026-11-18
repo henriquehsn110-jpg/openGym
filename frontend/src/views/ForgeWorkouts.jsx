@@ -7,11 +7,12 @@ import {FORGE_DEMOS} from '../lib/forge-demos.js'
 import Media, {Thumb} from '../components/Media.jsx'
 import {startFlow} from '../sheets.jsx'
 import {nextForgeRoutine} from '../lib/forge-schedule.js'
+import {scheduleModeOf} from '../lib/rotation.js'
 import './forge.css'
 const DAYS=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb']
 export default function ForgeWorkouts(){
  const S=useStore(s=>s.S);const [params,setParams]=useSearchParams();const chosen=params.get('routine');
- const routines=S.routines||[];const scheduled=[1,2,3,4,5,6,0].flatMap(day=>[].concat(S.week?.[day]||[]).map(id=>({day,id})));const ids=[...new Set(scheduled.map(x=>x.id))];const list=ids.length?ids.map(id=>routines.find(r=>r.id===id)).filter(Boolean):routines;
+ const routines=S.routines||[];const scheduled=[1,2,3,4,5,6,0].flatMap(day=>[].concat(S.week?.[day]||[]).map(id=>({day,id})));const ids=[...new Set(scheduled.map(x=>x.id))];const list=[...ids.map(id=>routines.find(r=>r.id===id)).filter(Boolean),...routines.filter(r=>!ids.includes(r.id))];
  const next=nextForgeRoutine(S);const selected=list.find(r=>r.id===chosen)||list.find(r=>r.id===next?.r.id)||list[0];const stale=S.active?.start>0&&Date.now()-S.active.start>12*60*60*1000;
  const daysFor=r=>scheduled.filter(x=>x.id===r.id).map(x=>DAYS[x.day]).join(' · ');
  return <main className="forge-page forge-training">
@@ -19,15 +20,44 @@ export default function ForgeWorkouts(){
   <div className="forge-tabs"><Link to="/home">Meu dia</Link><Link className="selected" to="/my-training">Treino</Link><Link to="/nutrition">Alimentação</Link></div>
 <p><Link className="forge-btn forge-secondary" to="/training/start">Criar ou importar minha ficha →</Link></p>
   {S.active&&<aside className="forge-session-notice"><strong>{stale?'Há uma sessão antiga em aberto.':'Você tem um treino em andamento.'}</strong><p>{stale?'Ela foi preservada. Abra a sessão para conferir e finalizar, ou descartá-la pelo menu do treino.':'Retome a sessão antes de iniciar outra.'}</p><Link className="forge-btn forge-secondary" to="/workout">Retomar sessão →</Link></aside>}
-  <div className="forge-routine-picker" aria-label="Escolher treino">{list.map((r,i)=><button key={r.id} aria-pressed={selected?.id===r.id} className={selected?.id===r.id?'selected':''} onClick={()=>setParams({routine:r.id},{replace:true})}><small>{daysFor(r)||'ROTINA '+(i+1)}</small><strong>{r.name}</strong><span>{r.ex.length} exercícios</span></button>)}</div>
+  <div className="forge-routine-picker" aria-label="Escolher treino">{list.map((r,i)=><button key={r.id} aria-pressed={selected?.id===r.id} className={selected?.id===r.id?'selected':''} onClick={()=>setParams({routine:r.id},{replace:true})}><small>{daysFor(r)||'SEM DIA DEFINIDO'}</small><strong>{r.name}</strong><span>{r.ex.length} exercícios</span></button>)}</div>
   {selected ? <>
    <section className="forge-workout-top"><div><div className="forge-eyebrow">{daysFor(selected)||'SUA FICHA'}</div><h2>{selected.name}</h2>{selected.focus&&<p>Ênfase planejada: {selected.focus}.</p>}<p>{selected.ex.length} exercícios · Registre suas cargas durante a sessão</p></div>{S.active?<Link className="forge-btn forge-primary" to="/workout">Retomar →</Link>:<button className="forge-btn forge-primary" onClick={()=>{if(!useStore.getState().S.active)startFlow([selected.id])}}>Iniciar treino ▶</button>}</section>
    <p className="forge-notice"><span className="forge-dot"/>Respire continuamente e respeite a amplitude confortável. Os vídeos demonstram o movimento; a prescrição é a da sua ficha.</p>
    <div className="forge-exercises">{selected.ex.map((e,i)=><ForgeExercise key={selected.id+'-'+e.id+'-'+i} e={e} i={i} rid={selected.id} defaultRest={S.restSec}/>)}</div>
+   <RoutineSchedule key={selected.id} routine={selected} S={S}/>
    <div className="forge-workout-links"><Link className="forge-btn forge-secondary" to={'/plan/r/'+selected.id}>Editar esta ficha</Link><Link className="forge-btn forge-secondary" to="/training">Objetivo e recuperação ↗</Link></div>
   </> : <section className="forge-card"><h2>Sua próxima ficha</h2><p>Importe sua ficha pronta ou responda ao questionário para criar uma proposta personalizada.</p><Link className="forge-btn forge-primary" to="/training/start">Escolher como criar minha ficha →</Link></section>}
-  <aside className="forge-footnote"><h3>Seu treino, sem se perder no catálogo.</h3><p>Aqui ficam as sessões da sua agenda. O catálogo completo continua disponível em Explorar, para buscar outros movimentos e montar novas fichas.</p><div className="forge-quick-links"><Link to="/plan">Agenda e todas as fichas ↗</Link><Link to="/library">Explorar exercícios ↗</Link><Link to="/family">Compartilhar aplicativo ↗</Link></div></aside>
+  <aside className="forge-footnote"><h3>Seu treino, sem se perder no catálogo.</h3><p>Aqui ficam todas as suas fichas. Escolha uma e defina os dias para usá-la na agenda. O catálogo completo continua disponível em Explorar, para buscar outros movimentos e montar novas fichas.</p><div className="forge-quick-links"><Link to="/plan">Agenda e todas as fichas ↗</Link><Link to="/library">Explorar exercícios ↗</Link><Link to="/family">Compartilhar aplicativo ↗</Link></div></aside>
  </main>
+}
+
+function RoutineSchedule({routine,S}){
+ const update=useStore(s=>s.update)
+ const [days,setDays]=useState(()=>[0,1,2,3,4,5,6].filter(day=>[].concat(S.week?.[day]||[]).includes(routine.id)))
+ const [saved,setSaved]=useState(false)
+ if(scheduleModeOf(S)==='rotation')return <p><Link className="forge-btn forge-secondary" to="/plan">Organizar esta ficha no Plano →</Link></p>
+ const apply=()=>{
+  update(s=>{
+   s.week={...s.week}
+   for(const day of [0,1,2,3,4,5,6]){
+    if(days.includes(day))s.week[day]=[routine.id]
+    else{
+     const remaining=[].concat(s.week[day]||[]).filter(id=>id!==routine.id)
+     if(remaining.length)s.week[day]=remaining
+     else delete s.week[day]
+    }
+   }
+  })
+  setSaved(true)
+ }
+ return <section className="forge-card forge-editor" aria-label="Dias desta ficha">
+  <h2>Dias desta ficha</h2>
+  <p>Escolha quando usar {routine.name}. Ao salvar, esta ficha passa a ser o treino dos dias marcados.</p>
+  <fieldset><legend>Dias da semana</legend>{[1,2,3,4,5,6,0].map(day=><label className="forge-check" key={day}><input type="checkbox" checked={days.includes(day)} onChange={event=>{setSaved(false);setDays(current=>event.target.checked?[...current,day]:current.filter(d=>d!==day))}}/>{['Domingo','Segunda-feira','Terça-feira','Quarta-feira','Quinta-feira','Sexta-feira','Sábado'][day]}</label>)}</fieldset>
+  <button className="forge-btn forge-primary" onClick={apply}>Salvar dias desta ficha</button>
+  {saved&&<p role="status">Dias salvos para {routine.name}.</p>}
+ </section>
 }
 
 function ForgeExercise({e,i,rid,defaultRest}){
