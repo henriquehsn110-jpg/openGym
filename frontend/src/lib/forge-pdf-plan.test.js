@@ -1,7 +1,27 @@
 import {it,expect} from 'vitest'
-import {parseTrainingText,applyPdfPlan,validateImportedRow,exerciseSuggestions} from './forge-pdf-plan.js'
+import {parseTrainingText,applyPdfPlan,schedulePdfPlan,validateImportedRow,exerciseSuggestions} from './forge-pdf-plan.js'
 import {pdfTextRows} from './forge-pdf-rows.js'
+import {todayISO} from './format.js'
 const approved=text=>{const d=parseTrainingText(text);for(const r of d.routines)for(const e of r.ex){e.reviewed=true;if(!e.exerciseId)e.custom=true}return d}
+it('activates imported routines on reviewed weekdays while preserving the old routines and active session',()=>{
+ const draft=approved('SEGUNDA · SUPERIORES A\nSupino reto com halteres 3x10\nSEXTA · INFERIORES B\nMovimento especial 3x12')
+ expect(draft.routines.map(r=>r.days)).toEqual([[1],[5]])
+ const s={routines:[{id:'old',ex:[]}],week:{2:['old']},dayPlan:{'2000-01-01':['old'],[todayISO()]:['old']},active:{id:'live',start:1000,entries:[{done:true}]},workouts:[{id:'history'}],forgeMeals:[{name:'keep'}]}
+ const before=structuredClone(s),ids=applyPdfPlan(s,draft)
+ schedulePdfPlan(s,ids,draft.routines.map(r=>r.days))
+ expect(s.week).toEqual({1:[ids[0]],5:[ids[1]]})
+ expect(s.dayPlan).toEqual({'2000-01-01':['old']})
+ expect(s.forgeScheduleBackups[0]).toMatchObject({week:before.week,dayPlan:before.dayPlan})
+ expect(s.routines[0]).toEqual(before.routines[0])
+ for(const key of ['active','workouts','forgeMeals'])expect(s[key]).toEqual(before[key])
+})
+it('rejects missing days, missing routines, and rotation before changing the schedule',()=>{
+ const s={routines:[{id:'new',ex:[]}],week:{2:['old']}}
+ for(const [ids,days] of [[['new'],[[]]],[['missing'],[[1]]],[['new'],[[7]]],[['new','new'],[[1],[2]]]]){
+  const before=structuredClone(s);expect(()=>schedulePdfPlan(s,ids,days)).toThrow();expect(s).toEqual(before)
+ }
+ s.scheduleMode='rotation';const before=structuredClone(s);expect(()=>schedulePdfPlan(s,['new'],[[1]])).toThrow(/rotação/);expect(s).toEqual(before)
+})
 it('groups routines, preserves notes and keeps ambiguous names for manual matching',()=>{
  const d=parseTrainingText('Treino A\n1. Supino reto com halteres 3x8–12 20kg descanso 90s\nSupino 3x10\nTreino B\nExercício especial 3x12/10/8\nOrientação: bi-set com descanso após o par')
  expect(d.routines).toHaveLength(2);const [a,b]=d.routines[0].ex

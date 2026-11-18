@@ -1,7 +1,7 @@
 import {EXDB,EXIDX} from './exercises.js'
 import pt from '../exercise-names/pt-BR.js'
 import {FORGE_DEMOS} from './forge-demos.js'
-import {uid} from './format.js'
+import {uid,todayISO} from './format.js'
 import {convertWeight} from './units.js'
 export const normalizeExercise=s=>String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim()
 const aliases=new Map()
@@ -56,7 +56,7 @@ export function parseTrainingText(text){
  for(const raw of String(text).split(/\r?\n/)){
   const line=raw.trim();if(!line)continue
   const dayHeading=line.match(/^(?:segunda|terça|quarta|quinta|sexta|sábado|domingo)(?:-feira)?[\s|·–—:-]+((?:superiores|inferiores|corpo inteiro)\s+[A-G])\b/i)
-  if(dayHeading){routine(dayHeading[1]);columns=null;continue}
+  if(dayHeading){routine(dayHeading[1]);const day=['domingo','segunda','terca','quarta','quinta','sexta','sabado'].indexOf(normalizeExercise(line).split(' ')[0]);current.days=[...new Set([...(current.days||[]),day])];columns=null;continue}
   if(/^(?:treino|ficha|dia)\s*(?:[A-G]|\d{1,2})(?:\b|\s*[-:])/i.test(line)&&line.length<100&&!/\d\s*[x×]\s*\d/i.test(line)){routine(line);columns=null;continue}
   const fields=line.split(/\s*\|\s*|\t+| {2,}/).map(s=>s.trim())
   const normalized=fields.map(normalizeExercise)
@@ -106,4 +106,17 @@ export function applyPdfPlan(s,draft){
  // Only append after every row passes validation; no inferred schedule and no history edits.
  s.customEx=[...(s.customEx||[]),...custom];s.routines=[...(s.routines||[]),...routines];s.forgeTitanLoaded=true
  return routines.map(r=>r.id)
+}
+
+// Explicitly activate an already saved import, keeping old routines and workout history.
+export function schedulePdfPlan(s,ids,days){
+ if(!ids?.length||new Set(ids).size!==ids.length||ids.some(id=>!s.routines?.some(r=>r.id===id)))throw Error('A ficha importada não está mais disponível. Importe novamente.')
+ if(s.scheduleMode==='rotation'||s.queue)throw Error('Sua agenda usa rotação. As fichas estão salvas; organize a rotação em Plano.')
+ if(!Array.isArray(days)||days.length!==ids.length||days.some(ds=>!Array.isArray(ds)||!ds.length||ds.some(d=>!Number.isInteger(d)||d<0||d>6)))throw Error('Escolha pelo menos um dia para cada treino importado.')
+ const week={}
+ ids.forEach((id,i)=>{for(const day of new Set(days[i]))(week[day]??=[]).push(id)})
+ s.forgeScheduleBackups=[...(s.forgeScheduleBackups||[]),{at:new Date().toISOString(),week:structuredClone(s.week||{}),dayPlan:structuredClone(s.dayPlan||{})}]
+ s.week=week
+ s.dayPlan=Object.fromEntries(Object.entries(s.dayPlan||{}).filter(([date])=>date<todayISO()))
+ s.scheduleMode='week'
 }

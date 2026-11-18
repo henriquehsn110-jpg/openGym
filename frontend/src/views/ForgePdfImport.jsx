@@ -1,7 +1,7 @@
 import React,{useEffect,useRef,useState} from 'react'
 import {Link} from 'react-router-dom'
 import {useStore} from '../store/useStore.js'
-import {parseTrainingText,exerciseSuggestions,newImportRow,applyPdfPlan,catalogExerciseName,validateImportedRow} from '../lib/forge-pdf-plan.js'
+import {parseTrainingText,exerciseSuggestions,newImportRow,applyPdfPlan,schedulePdfPlan,catalogExerciseName,validateImportedRow} from '../lib/forge-pdf-plan.js'
 import './forge.css'
 
 function importRowIssue(row){
@@ -19,6 +19,7 @@ export default function ForgePdfImport(){
  const update=useStore(s=>s.update)
  const [file,setFile]=useState(null),[ocr,setOcr]=useState(false),[busy,setBusy]=useState(false),[status,setStatus]=useState(''),[error,setError]=useState(''),[text,setText]=useState(''),[draft,setDraft]=useState(null),[saved,setSaved]=useState(false)
  const [confirmBatch,setConfirmBatch]=useState(false)
+ const [savedIds,setSavedIds]=useState([]),[days,setDays]=useState([]),[scheduled,setScheduled]=useState(false)
  const abort=useRef(null);useEffect(()=>()=>abort.current?.abort(),[])
  const parse=source=>{setConfirmBatch(false);try{const p=parseTrainingText(source);setDraft(p);setSaved(false);setError(p.routines.length?'':'Nenhum exercício reconhecido. Confira o texto ou adicione um treino e os exercícios manualmente.')}catch(e){setError(e.message)}}
  const read=async()=>{setConfirmBatch(false);if(!file){setError('Selecione um PDF.');return}setBusy(true);setError('');setDraft(null);setText('');setSaved(false);abort.current=new AbortController();try{const {readTrainingPdf}=await import('../lib/forge-pdf-read.js');const value=await readTrainingPdf(file,{ocr,signal:abort.current.signal,onProgress:setStatus});setText(value);parse(value)}catch(e){setError(e.message)}finally{setBusy(false);setStatus('')}}
@@ -35,7 +36,11 @@ export default function ForgePdfImport(){
  }
  const save=reviewedDraft=>{
   try{
-   update(s=>{applyPdfPlan(s,reviewedDraft)})
+   let ids
+   update(s=>{ids=applyPdfPlan(s,reviewedDraft)})
+   setSavedIds(ids)
+   setDays(reviewedDraft.routines.map(r=>r.days||[]))
+   setScheduled(false)
    setDraft(reviewedDraft)
    setSaved(true)
    setConfirmBatch(false)
@@ -81,7 +86,16 @@ export default function ForgePdfImport(){
    <button className="forge-btn forge-secondary" onClick={()=>{setConfirmBatch(false);setError('')}}>Voltar à revisão</button>
   </div>:<button className="forge-btn forge-primary" disabled={busy||!draft.routines.length||draft.routines.some(r=>!r.ex.length)} onClick={startImport}>Importar ficha revisada</button>}
  </section>}
- {saved&&<section className="forge-card" role="status"><h2>Ficha importada.</h2><p>Abra o Plano para consultar, ajustar a agenda e conferir métodos especiais antes de iniciar.</p><Link className="forge-btn forge-primary" to="/plan">Abrir meu plano →</Link></section>}
+ {saved&&<section className="forge-card"><h2 role="status">Ficha importada.</h2>
+ <p>{scheduled?'A ficha nova já está na sua agenda.':'A ficha está salva. Para substituir os treinos da agenda atual, confira os dias abaixo e confirme.'} As fichas antigas e o histórico são mantidos.</p>
+ {!scheduled&&<>
+ {draft.routines.map((r,i)=><fieldset key={r.key}><legend>{r.name} — dias da semana</legend>{[[1,'Segunda'],[2,'Terça'],[3,'Quarta'],[4,'Quinta'],[5,'Sexta'],[6,'Sábado'],[0,'Domingo']].map(([day,name])=><label className="forge-check" key={day}><input type="checkbox" checked={days[i]?.includes(day)||false} onChange={e=>{const checked=e.target.checked;setDays(ds=>ds.map((values,j)=>i===j?checked?[...values,day]:values.filter(d=>d!==day):values))}}/>{name}</label>)}</fieldset>)}
+ <p>Esta confirmação substitui a agenda semanal e os reagendamentos de hoje em diante. Uma sessão em andamento continua com a ficha anterior até ser finalizada.</p>
+ {error&&<p className="forge-notice" role="alert">{error}</p>}
+ <button className="forge-btn forge-primary" onClick={()=>{try{update(s=>schedulePdfPlan(s,savedIds,days));setScheduled(true);setError('')}catch(e){setError(e.message)}}}>Usar ficha importada na minha agenda</button>
+ </>}
+ <Link className="forge-btn forge-secondary" to={'/my-training?routine='+encodeURIComponent(savedIds[0]||'')}>Ver ficha importada →</Link>
+ <Link className="forge-btn forge-secondary" to="/plan">Abrir meu plano →</Link></section>}
  </main>
 }
 function ImportRow({row,disabled,onChange,onRemove}){

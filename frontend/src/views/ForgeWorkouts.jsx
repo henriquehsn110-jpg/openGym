@@ -11,7 +11,7 @@ import './forge.css'
 const DAYS=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb']
 export default function ForgeWorkouts(){
  const S=useStore(s=>s.S);const [params,setParams]=useSearchParams();const chosen=params.get('routine');
- const routines=S.routines||[];const scheduled=[1,2,3,4,5,6,0].flatMap(day=>[].concat(S.week?.[day]||[]).map(id=>({day,id})));const ids=[...new Set(scheduled.map(x=>x.id))];const list=ids.length?ids.map(id=>routines.find(r=>r.id===id)).filter(Boolean):routines;
+ const routines=S.routines||[];const scheduled=[1,2,3,4,5,6,0].flatMap(day=>[].concat(S.week?.[day]||[]).map(id=>({day,id})));const ids=[...new Set(scheduled.map(x=>x.id))];const list=[...ids.map(id=>routines.find(r=>r.id===id)).filter(Boolean),...routines.filter(r=>!ids.includes(r.id))];
  const next=nextForgeRoutine(S);const selected=list.find(r=>r.id===chosen)||list.find(r=>r.id===next?.r.id)||list[0];const stale=S.active?.start>0&&Date.now()-S.active.start>12*60*60*1000;
  const daysFor=r=>scheduled.filter(x=>x.id===r.id).map(x=>DAYS[x.day]).join(' · ');
  return <main className="forge-page forge-training">
@@ -19,14 +19,14 @@ export default function ForgeWorkouts(){
   <div className="forge-tabs"><Link to="/home">Meu dia</Link><Link className="selected" to="/my-training">Treino</Link><Link to="/nutrition">Alimentação</Link></div>
 <p><Link className="forge-btn forge-secondary" to="/training/start">Criar ou importar minha ficha →</Link></p>
   {S.active&&<aside className="forge-session-notice"><strong>{stale?'Há uma sessão antiga em aberto.':'Você tem um treino em andamento.'}</strong><p>{stale?'Ela foi preservada. Abra a sessão para conferir e finalizar, ou descartá-la pelo menu do treino.':'Retome a sessão antes de iniciar outra.'}</p><Link className="forge-btn forge-secondary" to="/workout">Retomar sessão →</Link></aside>}
-  <div className="forge-routine-picker" aria-label="Escolher treino">{list.map((r,i)=><button key={r.id} aria-pressed={selected?.id===r.id} className={selected?.id===r.id?'selected':''} onClick={()=>setParams({routine:r.id},{replace:true})}><small>{daysFor(r)||'ROTINA '+(i+1)}</small><strong>{r.name}</strong><span>{r.ex.length} exercícios</span></button>)}</div>
+  <div className="forge-routine-picker" aria-label="Escolher treino">{list.map(r=><button key={r.id} aria-pressed={selected?.id===r.id} className={selected?.id===r.id?'selected':''} onClick={()=>setParams({routine:r.id},{replace:true})}><small>{daysFor(r)||'SEM DIA DEFINIDO'}</small><strong>{r.name}</strong><span>{r.ex.length} exercícios</span></button>)}</div>
   {selected ? <>
    <section className="forge-workout-top"><div><div className="forge-eyebrow">{daysFor(selected)||'SUA FICHA'}</div><h2>{selected.name}</h2>{selected.focus&&<p>Ênfase planejada: {selected.focus}.</p>}<p>{selected.ex.length} exercícios · Registre suas cargas durante a sessão</p></div>{S.active?<Link className="forge-btn forge-primary" to="/workout">Retomar →</Link>:<button className="forge-btn forge-primary" onClick={()=>{if(!useStore.getState().S.active)startFlow([selected.id])}}>Iniciar treino ▶</button>}</section>
    <p className="forge-notice"><span className="forge-dot"/>Respire continuamente e respeite a amplitude confortável. Os vídeos demonstram o movimento; a prescrição é a da sua ficha.</p>
    <div className="forge-exercises">{selected.ex.map((e,i)=><ForgeExercise key={selected.id+'-'+e.id+'-'+i} e={e} i={i} rid={selected.id} defaultRest={S.restSec}/>)}</div>
    <div className="forge-workout-links"><Link className="forge-btn forge-secondary" to={'/plan/r/'+selected.id}>Editar esta ficha</Link><Link className="forge-btn forge-secondary" to="/training">Objetivo e recuperação ↗</Link></div>
   </> : <section className="forge-card"><h2>Sua próxima ficha</h2><p>Importe sua ficha pronta ou responda ao questionário para criar uma proposta personalizada.</p><Link className="forge-btn forge-primary" to="/training/start">Escolher como criar minha ficha →</Link></section>}
-  <aside className="forge-footnote"><h3>Seu treino, sem se perder no catálogo.</h3><p>Aqui ficam as sessões da sua agenda. O catálogo completo continua disponível em Explorar, para buscar outros movimentos e montar novas fichas.</p><div className="forge-quick-links"><Link to="/plan">Agenda e todas as fichas ↗</Link><Link to="/library">Explorar exercícios ↗</Link><Link to="/family">Compartilhar aplicativo ↗</Link></div></aside>
+  <aside className="forge-footnote"><h3>Seu treino, sem se perder no catálogo.</h3><p>Aqui ficam todas as suas fichas, inclusive as importadas sem dia definido. Organize os dias em Plano.</p><div className="forge-quick-links"><Link to="/plan">Agenda e todas as fichas ↗</Link><Link to="/library">Explorar exercícios ↗</Link><Link to="/family">Compartilhar aplicativo ↗</Link></div></aside>
  </main>
 }
 

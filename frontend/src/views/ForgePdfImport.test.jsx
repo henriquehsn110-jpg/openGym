@@ -62,3 +62,17 @@ it('shows the invalid prescription at the import button without saving the draft
  expect(button('Conferi a ficha, importar')).toBeUndefined()
  expect(store.update).not.toHaveBeenCalled()
 })
+
+it('lets a saved PDF replace an existing weekly schedule through an explicit confirmation',()=>{
+ const active={id:'live',start:123,entries:[{sets:[{done:true}]}]};store.S.active=structuredClone(active)
+ prepare('SEGUNDA · SUPERIORES A\nSupino reto com halteres 3x10\nSEXTA · INFERIORES B\nMovimento especial 3x12')
+ act(()=>button('Marcar todos como conferidos').click())
+ act(()=>button('Importar ficha revisada').click())
+ expect(store.S.week).toEqual({2:['old']})
+ expect(host.querySelector('a[href^="/my-training?routine="]')).not.toBeNull()
+ act(()=>button('Usar ficha importada na minha agenda').click())
+ expect(store.S.week).toEqual({1:[store.S.routines[1].id],5:[store.S.routines[2].id]})
+ expect(host.textContent).toContain('A ficha nova já está na sua agenda.')
+ expect(store.S.active).toEqual(active);expect(store.S.workouts).toEqual([{id:'done'}])
+ expect(store.S.routines[0].id).toBe('old')
+})
