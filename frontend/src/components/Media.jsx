@@ -7,16 +7,28 @@ import YouTubeDemo from './YouTubeDemo.jsx'
 import {demoFor,thumbnailFor} from '../lib/forge-video.js'
 import CustomMedia, { CustomThumb } from './CustomMedia.jsx'
 import { libraryVideoFor } from '../lib/forge-library-video.js'
+import { importedDemonstrations } from '../lib/forge-import-media.js'
 
 // An exercise's picture, wherever one shows. A custom exercise goes to CustomMedia.jsx — its own
 // photo, GIF, video or link, from the local media store — and never through imgSrc/gifSrc, which
 // name files of the shipped dataset (a stray img/gif on a custom exercise, written by a fork, is
 // ignored). The split is by component, not by branch, so each side keeps its own hooks in order.
 export default function Media(p) {
+  const options=importedDemonstrations(p.ex)
+  if(options.length)return <ImportedVideoOptions key={p.ex.id} {...p} options={options}/>
   return isCustomEx(p.ex) ? <CustomMedia {...p} /> : <BuiltinVideo key={p.ex.id} {...p} />
 }
 
-function BuiltinVideo({ex,minimizable}) {
+function ImportedVideoOptions({options,...props}){
+ const [chosen,setChosen]=useState(null)
+ const selected=options.length===1?options[0]:options.find(ex=>ex.id===chosen)
+ return <div className="forge-import-media">
+  {options.length>1&&<><p>Escolha a variação que você vai usar nesta ficha.</p><div className="forge-quick-links">{options.map(ex=><button className="forge-btn forge-secondary" aria-pressed={chosen===ex.id} key={ex.id} onClick={()=>setChosen(ex.id)}>{exerciseNameFor(ex)}</button>)}</div></>}
+  {selected&&<BuiltinVideo {...props} key={selected.id} ex={selected} preferAnimation/>}
+ </div>
+}
+
+function BuiltinVideo({ex,minimizable,preferAnimation=false}) {
  const size=useStore(s=>s.S.gifSize),update=useStore(s=>s.update);
  const body=useStore(s=>figureOf(s.S));
  const [youtube,setYoutube]=useState(false);
@@ -24,7 +36,7 @@ function BuiltinVideo({ex,minimizable}) {
  if(minimizable&&size==='off')return null;
  if(minimizable&&size==='mini')return <button className="forge-media-mini" onClick={()=>update(s=>{s.gifSize='full'})}><Thumb ex={ex}/><span>Ver demonstração <b>▶</b></span></button>;
  return <div className="forge-media-panel">
-  {!libraryVideo && demoFor({},ex.id) ? <YouTubeDemo ex={ex}/> : ex.gif || libraryVideo ? <>
+  {!preferAnimation && !libraryVideo && demoFor({},ex.id) ? <YouTubeDemo ex={ex}/> : ex.gif || libraryVideo ? <>
    {libraryVideo ? <LibraryVideo key={body} ex={ex} body={body} media={libraryVideo}/> : <CatalogueAnimation key={body} ex={ex} body={body}/>}
    <details className="forge-video-alternative" onToggle={e=>setYoutube(e.currentTarget.open)}>
     <summary>Vídeo explicativo no YouTube</summary>
