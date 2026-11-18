@@ -8,6 +8,7 @@ import Media, {Thumb} from '../components/Media.jsx'
 import {startFlow} from '../sheets.jsx'
 import {nextForgeRoutine} from '../lib/forge-schedule.js'
 import {scheduleModeOf} from '../lib/rotation.js'
+import {latestPdfRoutineIds,keepPdfRoutines} from '../lib/forge-pdf-plan.js'
 import './forge.css'
 const DAYS=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb']
 export default function ForgeWorkouts(){
@@ -19,6 +20,7 @@ export default function ForgeWorkouts(){
   <div className="forge-eyebrow">FICHA E DEMONSTRAÇÕES</div><header className="forge-title"><div><h1>Meu treino.</h1><p>Escolha a sessão e toque no exercício para ver a execução.</p></div><span className="forge-mark" aria-hidden="true">F<span>↗</span></span></header>
   <div className="forge-tabs"><Link to="/home">Meu dia</Link><Link className="selected" to="/my-training">Treino</Link><Link to="/nutrition">Alimentação</Link></div>
 <p><Link className="forge-btn forge-secondary" to="/training/start">Criar ou importar minha ficha →</Link></p>
+  {routines.length>1&&<RoutineCleanup S={S} onSaved={ids=>setParams({routine:ids[0]},{replace:true})}/>}
   {S.active&&<aside className="forge-session-notice"><strong>{stale?'Há uma sessão antiga em aberto.':'Você tem um treino em andamento.'}</strong><p>{stale?'Ela foi preservada. Abra a sessão para conferir e finalizar, ou descartá-la pelo menu do treino.':'Retome a sessão antes de iniciar outra.'}</p><Link className="forge-btn forge-secondary" to="/workout">Retomar sessão →</Link></aside>}
   <div className="forge-routine-picker" aria-label="Escolher treino">{list.map((r,i)=><button key={r.id} aria-pressed={selected?.id===r.id} className={selected?.id===r.id?'selected':''} onClick={()=>setParams({routine:r.id},{replace:true})}><small>{daysFor(r)||'SEM DIA DEFINIDO'}</small><strong>{r.name}</strong><span>{r.ex.length} exercícios</span></button>)}</div>
   {selected ? <>
@@ -30,6 +32,31 @@ export default function ForgeWorkouts(){
   </> : <section className="forge-card"><h2>Sua próxima ficha</h2><p>Importe sua ficha pronta ou responda ao questionário para criar uma proposta personalizada.</p><Link className="forge-btn forge-primary" to="/training/start">Escolher como criar minha ficha →</Link></section>}
   <aside className="forge-footnote"><h3>Seu treino, sem se perder no catálogo.</h3><p>Aqui ficam todas as suas fichas. Escolha uma e defina os dias para usá-la na agenda. O catálogo completo continua disponível em Explorar, para buscar outros movimentos e montar novas fichas.</p><div className="forge-quick-links"><Link to="/plan">Agenda e todas as fichas ↗</Link><Link to="/library">Explorar exercícios ↗</Link><Link to="/family">Compartilhar aplicativo ↗</Link></div></aside>
  </main>
+}
+
+function RoutineCleanup({S,onSaved}){
+ const update=useStore(s=>s.update)
+ const [open,setOpen]=useState(false),[keep,setKeep]=useState([]),[message,setMessage]=useState('')
+ const begin=()=>{setKeep(latestPdfRoutineIds(S));setMessage('');setOpen(true)}
+ const apply=()=>{
+  try{
+   let count
+   update(s=>{count=keepPdfRoutines(s,keep)})
+   setMessage(count+' fichas anteriores excluídas.')
+   setOpen(false)
+   onSaved(keep)
+  }catch(error){setMessage(error.message)}
+ }
+ return <section className="forge-card forge-editor">
+  {!open?<button className="forge-btn forge-secondary" onClick={begin}>Excluir fichas anteriores</button>:<>
+   <h2>Quais fichas deseja manter?</h2>
+   <p>Confira os treinos marcados. Ao aplicar, as fichas desmarcadas serão excluídas e retiradas da agenda. O histórico de treinos permanece disponível.</p>
+   <fieldset><legend>Fichas para manter</legend>{S.routines.map(r=><label className="forge-check" key={r.id}><input type="checkbox" checked={keep.includes(r.id)} onChange={event=>{const checked=event.target.checked;setKeep(current=>checked?[...current,r.id]:current.filter(id=>id!==r.id))}}/>{r.name} · {r.ex.length} exercícios</label>)}</fieldset>
+   <button className="forge-btn forge-primary" disabled={!keep.length} onClick={apply}>Manter apenas as fichas marcadas</button>
+   <button className="forge-btn forge-secondary" onClick={()=>setOpen(false)}>Cancelar</button>
+  </>}
+  {message&&<p role="status">{message}</p>}
+ </section>
 }
 
 function RoutineSchedule({routine,S}){

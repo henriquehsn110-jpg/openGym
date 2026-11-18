@@ -3,6 +3,7 @@ import pt from '../exercise-names/pt-BR.js'
 import {FORGE_DEMOS} from './forge-demos.js'
 import {uid} from './format.js'
 import {convertWeight} from './units.js'
+import {deleteRoutine} from './routines.js'
 export const normalizeExercise=s=>String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim()
 const aliases=new Map()
 function alias(name,id){const key=normalizeExercise(name);if(!key)return;const ids=aliases.get(key)||new Set();ids.add(id);aliases.set(key,ids)}
@@ -105,5 +106,27 @@ export function applyPdfPlan(s,draft){
  })}))
  // Only append after every row passes validation; no inferred schedule and no history edits.
  s.customEx=[...(s.customEx||[]),...custom];s.routines=[...(s.routines||[]),...routines];s.forgeTitanLoaded=true
- return routines.map(r=>r.id)
+ s.forgeLastPdfImport=routines.map(r=>r.id)
+ return s.forgeLastPdfImport
+}
+
+
+// Earlier imports have no batch marker. Their shared store stamp is only a suggestion,
+// shown in an editable checklist before any routine is removed.
+export function latestPdfRoutineIds(s){
+ const routines=s.routines||[]
+ const marked=(s.forgeLastPdfImport||[]).filter(id=>routines.some(r=>r.id===id))
+ if(marked.length)return marked
+ const imported=routines.filter(r=>r.ex?.some(e=>e.note?.startsWith('Importado de PDF.')))
+ const latest=imported.reduce((max,r)=>Math.max(max,Number(r._ts)||0),0)
+ return latest?imported.filter(r=>Number(r._ts)===latest).map(r=>r.id):[]
+}
+
+export function keepPdfRoutines(s,ids){
+ const keep=new Set(ids)
+ if(!keep.size||ids.some(id=>!s.routines.some(r=>r.id===id)))throw Error('Escolha as fichas que deseja manter.')
+ const removed=s.routines.filter(r=>!keep.has(r.id)).map(r=>r.id)
+ for(const id of removed)deleteRoutine(s,id)
+ s.forgeLastPdfImport=(s.forgeLastPdfImport||[]).filter(id=>keep.has(id))
+ return removed.length
 }
